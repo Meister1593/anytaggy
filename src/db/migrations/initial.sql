@@ -1,16 +1,16 @@
 CREATE TABLE files (
-    id int PRIMARY KEY ASC,
-    path varchar(2000),
-    name varchar(2000),
-    hash_sum text
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    path varchar(2000) NOT NULL,
+    name varchar(2000) NOT NULL,
+    hash_sum text UNIQUE NOT NULL
 );
 
 CREATE TABLE tags (
-    id int PRIMARY KEY ASC,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     name varchar(2000) UNIQUE NOT NULL
 );
 
 CREATE TABLE file_tags (
-    file_id int REFERENCES files (id),
-    tag_id int REFERENCES tags (id)
+    file_id INTEGER REFERENCES files (id),
+    tag_id INTEGER REFERENCES tags (id)
 );

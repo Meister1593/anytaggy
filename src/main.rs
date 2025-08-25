@@ -36,11 +36,14 @@ fn main() -> anyhow::Result<()> {
     let conn = Connection::open(parse.database_path)?;
 
     let mut db = Database::new(conn);
-    db.apply_migrations();
 
     match parse.command {
-        Command::Tag { file, tags } => commands::tag::tag(db, file, tags),
-        Command::Tags { file } => commands::tags::tags(db, file),
+        Command::Tag { file, tags } => commands::tag::tag(&mut db, file, tags),
+        Command::Tags { file } => {
+            let output = commands::tags::tags(&db, file)?;
+            println!("{output:?}");
+            Ok(())
+        }
     }?;
 
     Ok(())

@@ -1,6 +1,7 @@
-use std::fs::File;
+use std::{fs::File, io::Write};
 
 use assert_cmd::Command;
+use rand::prelude::*;
 use rusqlite::Connection;
 use temp_dir::TempDir;
 
@@ -46,13 +47,19 @@ fn tag_cmd() {
 
 #[test]
 fn tag() {
+    // Test data
     let temp_dir = TempDir::new().unwrap();
     let db_path = temp_dir.path().join("tmp_db.db");
     let tag_file = temp_dir.path().join("temp_tag_file");
-    File::create(&tag_file).unwrap();
+    let mut file = File::create(&tag_file).unwrap();
+    let mut rng = rand::rng();
+    file.write_all(&rng.random::<u128>().to_le_bytes()).unwrap();
+
+    // Database preparation
     let connection = Connection::open(db_path).unwrap();
     let mut db = Database::new(connection);
-    db.apply_migrations();
 
-    commands::tag::tag(db, tag_file, vec!["test".to_string()]).unwrap();
+    commands::tag::tag(&mut db, tag_file.clone(), vec!["test".to_string()]).unwrap();
+    let tags = commands::tags::tags(&db, tag_file.clone()).unwrap();
+    assert_eq!(["test".to_string()], tags.as_slice())
 }
