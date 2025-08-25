@@ -1,5 +1,3 @@
-use std::result;
-
 use rusqlite::{Connection, OptionalExtension};
 use rusqlite_migration::{M, Migrations};
 
@@ -33,7 +31,7 @@ impl Database {
         tags: Vec<String>,
     ) -> anyhow::Result<()> {
         let tx = self.connection.transaction()?;
-        let mut db_tags: Vec<Tag> = vec![];
+        let mut db_tags: Vec<i32> = vec![];
         for tag in tags {
             let result = tx
                 .prepare(
@@ -47,13 +45,11 @@ impl Database {
                 VALUES (?1) 
                 RETURNING id",
                 )?;
-                let tag = insert.query_one([tag.clone()], |row| {
-                    Ok(Tag {
-                        id: row.get(0)?,
-                        name: tag,
-                    })
-                })?;
-                db_tags.push(tag);
+                let tag_id_option: Option<i32> =
+                    insert.query_one([tag.clone()], |row| row.get(0))?;
+                if let Some(tag_id) = tag_id_option {
+                    db_tags.push(tag_id);
+                }
             }
         }
         {
@@ -62,6 +58,7 @@ impl Database {
             WHERE hash_sum = ?1",
             )?;
             let result: Option<i32> = select.query_one([&hash_sum], |row| row.get(0)).optional()?;
+            // todo: this looks kinda ugly, might be better to use unwrap_or_else (but then no automatic ?)
             let file_id = match result {
                 Some(file_id) => file_id,
                 None => {
@@ -74,10 +71,10 @@ impl Database {
                 }
             };
 
-            for tag in db_tags {
+            for tag_id in db_tags {
                 tx.execute(
                     "INSERT INTO file_tags (file_id, tag_id) VALUES (?1, ?2)",
-                    (file_id, tag.id),
+                    (file_id, tag_id),
                 )?;
             }
         }
@@ -101,18 +98,4 @@ impl Database {
         }
         Ok(tags)
     }
-}
-
-#[derive(Debug, PartialEq, Eq)]
-struct Tag {
-    id: i32,
-    name: String,
-}
-
-#[derive(Debug, PartialEq, Eq)]
-struct File {
-    id: i32,
-    path: String,
-    name: String,
-    hash_sum: String,
 }
