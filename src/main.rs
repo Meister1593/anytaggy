@@ -3,7 +3,7 @@ mod db;
 mod tests;
 
 use crate::db::Database;
-use clap::{Parser, builder::NonEmptyStringValueParser};
+use clap::{Parser, Subcommand, builder::NonEmptyStringValueParser};
 use rusqlite::Connection;
 use std::path::{Path, PathBuf};
 
@@ -13,21 +13,34 @@ struct Args {
     #[arg(short, long, default_value = Path::new(".anytaggy.sql").to_path_buf().into_os_string())]
     database_path: PathBuf,
 
-    file: PathBuf,
+    #[command(subcommand)]
+    command: Command,
+}
 
-    #[arg(short, long, value_parser = NonEmptyStringValueParser::new(), value_delimiter=',')]
-    tags: Vec<String>,
+#[derive(Subcommand, Debug)]
+enum Command {
+    Tag {
+        file: PathBuf,
+
+        #[arg(short, long, value_parser = NonEmptyStringValueParser::new(), value_delimiter=',')]
+        tags: Vec<String>,
+    },
+    Tags {
+        file: PathBuf,
+    },
 }
 
 fn main() -> anyhow::Result<()> {
     let parse = Args::parse();
-    #[cfg(test)]
-    let conn = Connection::open_in_memory()?;
-    #[cfg(not(test))]
     let conn = Connection::open(parse.database_path)?;
 
     let mut db = Database::new(conn);
     db.apply_migrations();
+
+    match parse.command {
+        Command::Tag { file, tags } => todo!(),
+        Command::Tags { file } => todo!(),
+    }
 
     Ok(())
 }

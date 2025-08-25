@@ -1,12 +1,7 @@
 use rusqlite::Connection;
 use rusqlite_migration::{M, Migrations};
 
-// 1️⃣ Define migrations
-const MIGRATIONS_SLICE: &[M<'_>] = &[
-    M::up(include_str!("migrations/initial.sql")),
-    // In the future, add more migrations here:
-    //M::up("ALTER TABLE friend ADD COLUMN email TEXT;"),
-];
+const MIGRATIONS_SLICE: &[M<'_>] = &[M::up(include_str!("migrations/initial.sql"))];
 const MIGRATIONS: Migrations<'_> = Migrations::from_slice(MIGRATIONS_SLICE);
 
 pub struct Database {
