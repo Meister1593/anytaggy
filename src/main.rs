@@ -41,7 +41,7 @@ fn main() -> anyhow::Result<()> {
         Command::Tag { file, tags } => commands::tag::tag(&mut db, file, tags),
         Command::Tags { file } => {
             let output = commands::tags::tags(&db, file)?;
-            println!("{output:?}");
+            println!("{output}");
             Ok(())
         }
     }?;

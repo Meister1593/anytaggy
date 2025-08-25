@@ -14,7 +14,7 @@ fn cargo_bin_cmd() -> Command {
 #[test]
 fn blank_test() {
     let mut cmd = cargo_bin_cmd();
-    cmd.assert().failure();
+    cmd.assert().failure().code(2);
 }
 
 #[test]
@@ -22,7 +22,7 @@ fn tag_cmd() {
     let mut cmd = cargo_bin_cmd();
 
     let temp_dir = TempDir::new().unwrap();
-    let temp_db = temp_dir.path().join("tmp_db.sql");
+    let temp_db = temp_dir.path().join("tmp_db.db");
     let temp_tag_file = temp_dir.path().join("temp_tag_file");
     File::create(&temp_tag_file).unwrap();
 
@@ -36,13 +36,14 @@ fn tag_cmd() {
         .assert();
     assert.success();
 
+    let mut cmd = cargo_bin_cmd();
     let assert = cmd
         .arg("--database-path")
         .arg(&temp_db)
         .arg("tags")
         .arg(&temp_tag_file)
         .assert();
-    assert.success().stdout("test,test2,test3");
+    assert.success().stdout("test, test2, test3\n");
 }
 
 #[test]
@@ -62,5 +63,7 @@ fn tag() {
 
     commands::tag::tag(&mut db, tag_file.clone(), test_tags.clone()).unwrap();
     let tags = commands::tags::tags(&db, tag_file.clone()).unwrap();
-    assert_eq!(test_tags.as_slice(), tags.as_slice())
+    assert_eq!(test_tags.join(", "), tags)
 }
+
+// todo: test cases with trimming to be added

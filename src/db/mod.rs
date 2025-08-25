@@ -33,13 +33,14 @@ impl Database {
         let tx = self.connection.transaction()?;
         let mut db_tags: Vec<i32> = vec![];
         for tag in tags {
-            let result = tx
+            let tag = tag.trim();
+            let tag_found = tx
                 .prepare(
                     "SELECT * FROM tags 
                 WHERE name = ?1",
                 )?
                 .exists([&tag])?;
-            if !result {
+            if !tag_found {
                 let mut insert = tx.prepare(
                     "INSERT INTO tags (name) 
                 VALUES (?1) 
@@ -57,9 +58,10 @@ impl Database {
                 "SELECT id FROM files 
             WHERE hash_sum = ?1",
             )?;
-            let result: Option<i32> = select.query_one([&hash_sum], |row| row.get(0)).optional()?;
+            let file_id_option: Option<i32> =
+                select.query_one([&hash_sum], |row| row.get(0)).optional()?;
             // todo: this looks kinda ugly, might be better to use unwrap_or_else (but then no automatic ?)
-            let file_id = match result {
+            let file_id = match file_id_option {
                 Some(file_id) => file_id,
                 None => {
                     let mut insert = tx.prepare(
@@ -91,9 +93,9 @@ impl Database {
             INNER JOIN file_tags ON file_tags.tag_id = t.id 
             INNER JOIN files ON files.id = file_tags.file_id AND files.hash_sum = ?1",
         )?;
-        let result = select.query_map([&hash_sum], |row| row.get(0))?;
+        let file_tags = select.query_map([&hash_sum], |row| row.get(0))?;
         let mut tags: Vec<String> = Vec::new();
-        for tag in result {
+        for tag in file_tags {
             tags.push(tag?);
         }
         Ok(tags)
