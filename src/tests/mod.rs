@@ -54,12 +54,13 @@ fn tag() {
     let mut file = File::create(&tag_file).unwrap();
     let mut rng = rand::rng();
     file.write_all(&rng.random::<u128>().to_le_bytes()).unwrap();
+    let test_tags: Vec<String> = vec!["test".into(), "test2".into(), "test3".into()];
 
     // Database preparation
     let connection = Connection::open(db_path).unwrap();
     let mut db = Database::new(connection);
 
-    commands::tag::tag(&mut db, tag_file.clone(), vec!["test".to_string()]).unwrap();
+    commands::tag::tag(&mut db, tag_file.clone(), test_tags.clone()).unwrap();
     let tags = commands::tags::tags(&db, tag_file.clone()).unwrap();
-    assert_eq!(["test".to_string()], tags.as_slice())
+    assert_eq!(test_tags.as_slice(), tags.as_slice())
 }
