@@ -47,7 +47,7 @@ fn tag_cmd() {
 }
 
 #[test]
-fn tag() {
+fn tag_and_tags() {
     // Test data
     let temp_dir = TempDir::new().unwrap();
     let db_path = temp_dir.path().join("tmp_db.db");

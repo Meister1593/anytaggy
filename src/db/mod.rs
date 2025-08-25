@@ -47,7 +47,7 @@ impl Database {
                 RETURNING id",
                 )?;
                 let tag_id_option: Option<i32> =
-                    insert.query_one([tag.clone()], |row| row.get(0))?;
+                    insert.query_one([tag], |row| row.get(0))?;
                 if let Some(tag_id) = tag_id_option {
                     db_tags.push(tag_id);
                 }
