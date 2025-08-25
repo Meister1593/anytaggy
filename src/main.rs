@@ -1,3 +1,4 @@
+mod commands;
 mod db;
 #[cfg(test)]
 mod tests;
@@ -10,7 +11,7 @@ use std::path::{Path, PathBuf};
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, default_value = Path::new(".anytaggy.sql").to_path_buf().into_os_string())]
+    #[arg(short, long, default_value = Path::new(".anytaggy.db").to_path_buf().into_os_string())]
     database_path: PathBuf,
 
     #[command(subcommand)]
@@ -38,9 +39,9 @@ fn main() -> anyhow::Result<()> {
     db.apply_migrations();
 
     match parse.command {
-        Command::Tag { file, tags } => todo!(),
-        Command::Tags { file } => todo!(),
-    }
+        Command::Tag { file, tags } => commands::tag::tag(db, file, tags),
+        Command::Tags { file } => commands::tags::tags(db, file),
+    }?;
 
     Ok(())
 }

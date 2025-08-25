@@ -1,7 +1,10 @@
 use std::fs::File;
 
 use assert_cmd::Command;
+use rusqlite::Connection;
 use temp_dir::TempDir;
+
+use crate::{commands, db::Database};
 
 fn cargo_bin_cmd() -> Command {
     Command::cargo_bin("anytaggy").unwrap()
@@ -14,7 +17,7 @@ fn blank_test() {
 }
 
 #[test]
-fn tag() {
+fn tag_cmd() {
     let mut cmd = cargo_bin_cmd();
 
     let temp_dir = TempDir::new().unwrap();
@@ -39,4 +42,17 @@ fn tag() {
         .arg(&temp_tag_file)
         .assert();
     assert.success().stdout("test,test2,test3");
+}
+
+#[test]
+fn tag() {
+    let temp_dir = TempDir::new().unwrap();
+    let db_path = temp_dir.path().join("tmp_db.db");
+    let tag_file = temp_dir.path().join("temp_tag_file");
+    File::create(&tag_file).unwrap();
+    let connection = Connection::open(db_path).unwrap();
+    let mut db = Database::new(connection);
+    db.apply_migrations();
+
+    commands::tag::tag(db, tag_file, vec!["test".to_string()]).unwrap();
 }
