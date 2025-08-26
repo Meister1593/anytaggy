@@ -1,6 +1,14 @@
+mod tables;
+
 use anyhow::Result;
-use rusqlite::{Connection, OptionalExtension, Transaction};
+use rusqlite::Connection;
 use rusqlite_migration::{M, Migrations};
+
+use crate::db::tables::{
+    file_tags::{get_file_tags, reference_file_tag},
+    files::{create_file, get_file_id},
+    tags::{create_tag, does_tag_exist_by_name},
+};
 
 const MIGRATIONS_SLICE: &[M] = &[M::up(include_str!("migrations/initial.sql"))];
 const MIGRATIONS: Migrations = Migrations::from_slice(MIGRATIONS_SLICE);
@@ -57,60 +65,6 @@ impl Database {
     }
 
     pub fn get_tags(&self, hash_sum: &str) -> Result<Vec<String>> {
-        let mut select = self.connection.prepare(
-            "SELECT t.name 
-            FROM tags t 
-            INNER JOIN file_tags ON file_tags.tag_id = t.id 
-            INNER JOIN files ON files.id = file_tags.file_id AND files.hash_sum = ?1",
-        )?;
-        let file_tags = select.query_map([&hash_sum], |row| row.get(0))?;
-        let mut tags: Vec<String> = Vec::new();
-        for tag in file_tags {
-            tags.push(tag?);
-        }
-        Ok(tags)
+        get_file_tags(&self.connection, hash_sum)
     }
-}
-
-fn reference_file_tag(tx: &Transaction, file_id: i32, tag_id: i32) -> Result<()> {
-    tx.execute(
-        "INSERT INTO file_tags (file_id, tag_id) VALUES (?1, ?2)",
-        (file_id, tag_id),
-    )?;
-    Ok(())
-}
-
-fn create_tag(tx: &Transaction, tag: &str) -> Result<i32> {
-    let mut insert = tx.prepare(
-        "INSERT INTO tags (name) 
-                VALUES (?1) 
-                RETURNING id",
-    )?;
-    Ok(insert.query_one([tag], |row| row.get(0))?)
-}
-
-fn does_tag_exist_by_name(conn: &Connection, tag: &str) -> Result<bool> {
-    Ok(conn
-        .prepare(
-            "SELECT * FROM tags 
-                WHERE name = ?1",
-        )?
-        .exists([&tag])?)
-}
-
-fn get_file_id(conn: &Connection, hash_sum: &str) -> Result<Option<i32>> {
-    let mut select = conn.prepare(
-        "SELECT id FROM files 
-            WHERE hash_sum = ?1",
-    )?;
-    Ok(select.query_one([&hash_sum], |row| row.get(0)).optional()?)
-}
-
-fn create_file(tx: &Transaction, file_path: &str, file_name: &str, hash_sum: &str) -> Result<i32> {
-    let mut insert = tx.prepare(
-        "INSERT INTO files (path, name, hash_sum) 
-                        VALUES (?1, ?2, ?3) 
-                        RETURNING id",
-    )?;
-    Ok(insert.query_one((file_path, file_name, hash_sum), |row| row.get(0))?)
 }

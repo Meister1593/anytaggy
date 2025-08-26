@@ -41,8 +41,7 @@ fn main() -> anyhow::Result<()> {
     match parse.command {
         Command::Tag { file_path, tags } => commands::tag::tag(&mut db, &file_path, tags),
         Command::Tags { file_path } => {
-            let output = commands::tags::tags(&db, &file_path)?;
-            println!("{output}");
+            println!("{}", commands::tags::tags(&db, &file_path)?);
             Ok(())
         }
     }?;
