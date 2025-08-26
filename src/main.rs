@@ -1,3 +1,4 @@
+#![warn(clippy::pedantic)]
 mod commands;
 mod db;
 #[cfg(test)]
@@ -21,13 +22,13 @@ struct Args {
 #[derive(Subcommand, Debug)]
 enum Command {
     Tag {
-        file: PathBuf,
+        file_path: PathBuf,
 
         #[arg(short, long, value_parser = NonEmptyStringValueParser::new(), value_delimiter=',')]
         tags: Vec<String>,
     },
     Tags {
-        file: PathBuf,
+        file_path: PathBuf,
     },
 }
 
@@ -38,9 +39,9 @@ fn main() -> anyhow::Result<()> {
     let mut db = Database::new(conn);
 
     match parse.command {
-        Command::Tag { file, tags } => commands::tag::tag(&mut db, file, tags),
-        Command::Tags { file } => {
-            let output = commands::tags::tags(&db, file)?;
+        Command::Tag { file_path, tags } => commands::tag::tag(&mut db, &file_path, tags),
+        Command::Tags { file_path } => {
+            let output = commands::tags::tags(&db, &file_path)?;
             println!("{output}");
             Ok(())
         }

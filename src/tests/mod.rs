@@ -61,9 +61,9 @@ fn tag_and_tags() {
     let connection = Connection::open(db_path).unwrap();
     let mut db = Database::new(connection);
 
-    commands::tag::tag(&mut db, tag_file.clone(), test_tags.clone()).unwrap();
-    let tags = commands::tags::tags(&db, tag_file.clone()).unwrap();
-    assert_eq!(test_tags.join(", "), tags)
+    commands::tag::tag(&mut db, &tag_file, test_tags.clone()).unwrap();
+    let tags = commands::tags::tags(&db, &tag_file).unwrap();
+    assert_eq!(test_tags.join(", "), tags);
 }
 
 // todo: test cases with trimming to be added
