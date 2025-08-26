@@ -2,7 +2,7 @@ CREATE TABLE files (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     path VARCHAR(2000) NOT NULL,
     name VARCHAR(2000) NOT NULL,
-    hash_sum TEXT UNIQUE NOT NULL
+    hash TEXT UNIQUE NOT NULL
 );
 
 CREATE TABLE tags (
@@ -12,5 +12,6 @@ CREATE TABLE tags (
 
 CREATE TABLE file_tags (
     file_id INTEGER REFERENCES files (id),
-    tag_id INTEGER REFERENCES tags (id)
+    tag_id INTEGER REFERENCES tags (id),
+    UNIQUE (file_id, tag_id)
 );

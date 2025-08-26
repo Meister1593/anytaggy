@@ -6,7 +6,9 @@ use rusqlite_migration::{M, Migrations};
 use tracing::{debug, info};
 
 use crate::db::tables::{
-    file_tags::{get_file_tags, get_files_by_tags, reference_file_tag},
+    file_tags::{
+        get_file_tag_ids_by_id, get_file_tags_by_hash, get_files_by_tags, reference_file_tag,
+    },
     files::{create_file, get_file_id},
     tags::{create_tag, get_tag_id_by_name},
 };
@@ -37,7 +39,7 @@ impl Database {
         &mut self,
         file_path: &str,
         file_name: &str,
-        hash_sum: &str,
+        hash: &str,
         tags: Vec<String>,
     ) -> Result<()> {
         let tx = self.connection.transaction()?;
@@ -56,16 +58,19 @@ impl Database {
         }
 
         // todo: this looks kinda ugly, might be better to use unwrap_or_else (but then no automatic ?)
-        let file_id = if let Some(file_id) = get_file_id(&tx, hash_sum)? {
+        let file_id = if let Some(file_id) = get_file_id(&tx, hash)? {
             debug!("found file_id {file_id}");
             file_id
         } else {
-            create_file(&tx, file_path, file_name, hash_sum)?
+            create_file(&tx, file_path, file_name, hash)?
         };
         debug!("file_id: {file_id}");
 
+        let file_tag_ids = get_file_tag_ids_by_id(&tx, file_id)?;
         for tag_id in db_tags {
-            reference_file_tag(&tx, file_id, tag_id)?;
+            if !file_tag_ids.contains(&tag_id) {
+                reference_file_tag(&tx, file_id, tag_id)?;
+            }
         }
 
         tx.commit()?;
@@ -73,8 +78,8 @@ impl Database {
         Ok(())
     }
 
-    pub fn get_file_tags(&self, hash_sum: &str) -> Result<Vec<String>> {
-        get_file_tags(&self.connection, hash_sum)
+    pub fn get_file_tags(&self, hash: &str) -> Result<Vec<String>> {
+        get_file_tags_by_hash(&self.connection, hash)
     }
 
     pub fn get_files_by_tag(&self, tags: Vec<String>) -> Result<Vec<String>> {
