@@ -1,15 +1,14 @@
+pub mod files;
+pub mod tag;
+pub mod tags;
+
+use anyhow::Result;
+use sha2::Digest;
 use std::{
     fs::File,
     io::{self},
     path::Path,
 };
-
-use anyhow::Result;
-use sha2::Digest;
-
-pub mod files;
-pub mod tag;
-pub mod tags;
 
 pub fn get_file_hash(file_path: &Path) -> Result<String> {
     let mut hasher = sha2::Sha256::new();

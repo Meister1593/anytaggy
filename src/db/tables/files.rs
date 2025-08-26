@@ -2,12 +2,7 @@ use anyhow::Result;
 use rusqlite::{Connection, OptionalExtension, Transaction};
 use tracing::debug;
 
-pub fn create_file(
-    tx: &Transaction,
-    file_path: &str,
-    file_name: &str,
-    hash: &str,
-) -> Result<i32> {
+pub fn create_file(tx: &Transaction, file_path: &str, file_name: &str, hash: &str) -> Result<i32> {
     let mut insert = tx.prepare(
         "INSERT INTO files (path, name, hash) 
                         VALUES (?1, ?2, ?3) 

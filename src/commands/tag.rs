@@ -1,7 +1,6 @@
-use std::path::Path;
-
 use anyhow::Context;
 use anyhow::Result;
+use std::path::Path;
 
 use crate::db::Database;
 

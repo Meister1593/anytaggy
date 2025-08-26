@@ -1,10 +1,5 @@
 mod tables;
 
-use anyhow::Result;
-use rusqlite::Connection;
-use rusqlite_migration::{M, Migrations};
-use tracing::{debug, info};
-
 use crate::db::tables::{
     file_tags::{
         get_file_tag_ids_by_id, get_file_tags_by_hash, get_files_by_tags, reference_file_tag,
@@ -12,6 +7,10 @@ use crate::db::tables::{
     files::{create_file, get_file_id},
     tags::{create_tag, get_tag_id_by_name},
 };
+use anyhow::Result;
+use rusqlite::Connection;
+use rusqlite_migration::{M, Migrations};
+use tracing::{debug, info};
 
 const MIGRATIONS_SLICE: &[M] = &[M::up(include_str!("migrations/initial.sql"))];
 const MIGRATIONS: Migrations = Migrations::from_slice(MIGRATIONS_SLICE);
