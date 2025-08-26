@@ -14,5 +14,5 @@ pub fn get_file_hash(file_path: PathBuf) -> Result<String, anyhow::Error> {
     let mut file = File::open(&file_path)?;
     io::copy(&mut file, &mut hasher)?;
     let result = hasher.finalize();
-    Ok(format!("{result:X}"))
+    Ok(format!("{result:x}"))
 }
