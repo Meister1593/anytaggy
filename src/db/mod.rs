@@ -3,11 +3,12 @@ mod tables;
 use anyhow::Result;
 use rusqlite::Connection;
 use rusqlite_migration::{M, Migrations};
+use tracing::{debug, info};
 
 use crate::db::tables::{
-    file_tags::{get_file_tags, reference_file_tag},
+    file_tags::{get_file_tags, get_files_by_tags, reference_file_tag},
     files::{create_file, get_file_id},
-    tags::{create_tag, does_tag_exist_by_name},
+    tags::{create_tag, get_tag_id_by_name},
 };
 
 const MIGRATIONS_SLICE: &[M] = &[M::up(include_str!("migrations/initial.sql"))];
@@ -32,7 +33,7 @@ impl Database {
         db
     }
 
-    pub fn tag(
+    pub fn tag_file(
         &mut self,
         file_path: &str,
         file_name: &str,
@@ -43,17 +44,25 @@ impl Database {
         let mut db_tags = vec![];
         for tag in tags {
             let tag = tag.trim();
-            if !does_tag_exist_by_name(&tx, tag)? {
-                db_tags.push(create_tag(&tx, tag)?);
-            }
+            let tag_id = if let Some(tag_id) = get_tag_id_by_name(&tx, tag)? {
+                tag_id
+            } else {
+                let tag_id = create_tag(&tx, tag)?;
+                info!("created tag: {tag}");
+                tag_id
+            };
+            debug!("tag_id: {tag_id}");
+            db_tags.push(tag_id);
         }
 
-        let file_id_option = get_file_id(&tx, hash_sum)?;
         // todo: this looks kinda ugly, might be better to use unwrap_or_else (but then no automatic ?)
-        let file_id = match file_id_option {
-            Some(file_id) => file_id,
-            None => create_file(&tx, file_path, file_name, hash_sum)?,
+        let file_id = if let Some(file_id) = get_file_id(&tx, hash_sum)? {
+            debug!("found file_id {file_id}");
+            file_id
+        } else {
+            create_file(&tx, file_path, file_name, hash_sum)?
         };
+        debug!("file_id: {file_id}");
 
         for tag_id in db_tags {
             reference_file_tag(&tx, file_id, tag_id)?;
@@ -64,7 +73,11 @@ impl Database {
         Ok(())
     }
 
-    pub fn get_tags(&self, hash_sum: &str) -> Result<Vec<String>> {
+    pub fn get_file_tags(&self, hash_sum: &str) -> Result<Vec<String>> {
         get_file_tags(&self.connection, hash_sum)
+    }
+
+    pub fn get_files_by_tag(&self, tags: Vec<String>) -> Result<Vec<String>> {
+        get_files_by_tags(&self.connection, tags)
     }
 }

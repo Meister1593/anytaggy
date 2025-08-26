@@ -1,5 +1,6 @@
 use anyhow::Result;
 use rusqlite::{Connection, OptionalExtension, Transaction};
+use tracing::debug;
 
 pub fn create_file(
     tx: &Transaction,
@@ -12,7 +13,9 @@ pub fn create_file(
                         VALUES (?1, ?2, ?3) 
                         RETURNING id",
     )?;
-    Ok(insert.query_one((file_path, file_name, hash_sum), |row| row.get(0))?)
+    let file_id = insert.query_one((file_path, file_name, hash_sum), |row| row.get(0))?;
+    debug!("created file {file_name} with id {file_id}");
+    Ok(file_id)
 }
 
 pub fn get_file_id(conn: &Connection, hash_sum: &str) -> Result<Option<i32>> {

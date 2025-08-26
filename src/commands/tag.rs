@@ -14,7 +14,7 @@ pub fn tag(db: &mut Database, file_path: &Path, tags: Vec<String>) -> Result<()>
     let hash_sum = super::get_file_hash(file_path)?;
     let file_path = file_path.display().to_string();
 
-    db.tag(&file_path, &file_name, &hash_sum, tags)?;
+    db.tag_file(&file_path, &file_name, &hash_sum, tags)?;
 
     Ok(())
 }

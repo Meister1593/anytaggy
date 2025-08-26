@@ -7,6 +7,7 @@ use std::{
 use anyhow::Result;
 use sha2::Digest;
 
+pub mod files;
 pub mod tag;
 pub mod tags;
 
