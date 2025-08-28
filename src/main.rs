@@ -4,10 +4,12 @@ mod db;
 #[cfg(test)]
 mod tests;
 
-use crate::db::Database;
+use crate::db::{Database, DatabaseMode};
 use clap::{Parser, Subcommand, builder::NonEmptyStringValueParser};
-use rusqlite::Connection;
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    process::ExitCode,
+};
 use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberInitExt};
 
 #[derive(Parser, Debug)]
@@ -41,33 +43,51 @@ enum Command {
     },
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<ExitCode> {
     tracing_subscriber::registry()
         .with(fmt::layer())
         .with(EnvFilter::from_default_env())
         .init();
 
     let parse = Args::parse();
-    let conn = Connection::open(parse.database_path)?;
-    let mut db = Database::new(conn);
 
     match parse.command {
-        Command::Tag { file_path, tags } => commands::tag::tag_file(&mut db, &file_path, tags),
+        Command::Tag { file_path, tags } => {
+            let mut db = Database::new(&DatabaseMode::ReadWrite, &parse.database_path);
+
+            commands::tag::tag_file(&mut db, &file_path, tags)?;
+
+            Ok(ExitCode::SUCCESS)
+        }
         Command::Tags { file_path } => {
+            if !parse.database_path.exists() {
+                println!("ERROR: Database file could not be found");
+
+                return Ok(ExitCode::FAILURE);
+            }
+
+            let db = Database::new(&DatabaseMode::Read, &parse.database_path);
+
             if let Some(file_path) = file_path {
                 println!("{}", commands::tags::get_file_tags(&db, &file_path)?);
             } else {
                 println!("{}", commands::tags::get_all_tags(&db)?);
             }
 
-            Ok(())
+            Ok(ExitCode::SUCCESS)
         }
         Command::Files { tags } => {
+            if !parse.database_path.exists() {
+                println!("ERROR: Database file could not be found");
+
+                return Ok(ExitCode::FAILURE);
+            }
+
+            let db = Database::new(&DatabaseMode::Read, &parse.database_path);
+
             println!("{}", commands::files::get_file_paths(&db, &tags)?);
 
-            Ok(())
+            Ok(ExitCode::SUCCESS)
         }
-    }?;
-
-    Ok(())
+    }
 }

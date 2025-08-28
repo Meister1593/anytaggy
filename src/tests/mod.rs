@@ -1,8 +1,10 @@
 mod cmd;
 
-use crate::{commands, db::Database};
+use crate::{
+    commands,
+    db::{Database, DatabaseMode},
+};
 use rand::prelude::*;
-use rusqlite::Connection;
 use std::{
     fs::File,
     io::Write,
@@ -36,10 +38,10 @@ fn tag_file() {
     let (db_path, tag_file, _, test_tags, _) = two_files_multiple_tags_prepare(&temp_dir);
 
     // Database preparation
-    let connection = Connection::open(db_path).unwrap();
-    let mut db = Database::new(connection);
-
+    let mut db = Database::new(&DatabaseMode::ReadWrite, &db_path);
     commands::tag::tag_file(&mut db, &tag_file, test_tags.clone()).unwrap();
+
+    let db = Database::new(&DatabaseMode::Read, &db_path);
     let tags = commands::tags::get_file_tags(&db, &tag_file).unwrap();
     assert_eq!(test_tags.join(","), tags);
 }
@@ -51,12 +53,11 @@ fn files_joined_tag() {
     let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
         two_files_multiple_tags_prepare(&temp_dir);
 
-    // Database preparation
-    let connection = Connection::open(db_path).unwrap();
-    let mut db = Database::new(connection);
-
+    let mut db = Database::new(&DatabaseMode::ReadWrite, &db_path);
     commands::tag::tag_file(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
     commands::tag::tag_file(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
+
+    let db = Database::new(&DatabaseMode::Read, &db_path);
     assert_eq!(
         format!("{}\n{}", tag_file_1.display(), tag_file_2.display()),
         commands::files::get_file_paths(&db, &["test3".into()]).unwrap()
@@ -70,12 +71,11 @@ fn files_left_tag() {
     let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
         two_files_multiple_tags_prepare(&temp_dir);
 
-    // Database preparation
-    let connection = Connection::open(db_path).unwrap();
-    let mut db = Database::new(connection);
-
+    let mut db = Database::new(&DatabaseMode::ReadWrite, &db_path);
     commands::tag::tag_file(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
     commands::tag::tag_file(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
+
+    let db = Database::new(&DatabaseMode::Read, &db_path);
     assert_eq!(
         tag_file_1.display().to_string(),
         commands::files::get_file_paths(&db, &["test".into(), "test2".into()]).unwrap()
@@ -89,12 +89,11 @@ fn files_right_tag() {
     let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
         two_files_multiple_tags_prepare(&temp_dir);
 
-    // Database preparation
-    let connection = Connection::open(db_path).unwrap();
-    let mut db = Database::new(connection);
-
+    let mut db = Database::new(&DatabaseMode::ReadWrite, &db_path);
     commands::tag::tag_file(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
     commands::tag::tag_file(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
+
+    let db = Database::new(&DatabaseMode::Read, &db_path);
     assert_eq!(
         tag_file_2.display().to_string(),
         commands::files::get_file_paths(&db, &["test4".into()]).unwrap()
@@ -108,12 +107,11 @@ fn files_neither_tag() {
     let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
         two_files_multiple_tags_prepare(&temp_dir);
 
-    // Database preparation
-    let connection = Connection::open(db_path).unwrap();
-    let mut db = Database::new(connection);
-
+    let mut db = Database::new(&DatabaseMode::ReadWrite, &db_path);
     commands::tag::tag_file(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
     commands::tag::tag_file(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
+
+    let db = Database::new(&DatabaseMode::Read, &db_path);
     assert_eq!(
         "",
         commands::files::get_file_paths(&db, &[&test_tags_1[..], &test_tags_2[..]].concat())
@@ -127,11 +125,10 @@ fn get_tags() {
     let temp_dir = TempDir::new().unwrap();
     let (db_path, tag_file_1, _, test_tags_1, _) = two_files_multiple_tags_prepare(&temp_dir);
 
-    // Database preparation
-    let connection = Connection::open(db_path).unwrap();
-    let mut db = Database::new(connection);
-
+    let mut db = Database::new(&DatabaseMode::ReadWrite, &db_path);
     commands::tag::tag_file(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
+
+    let db = Database::new(&DatabaseMode::Read, &db_path);
     assert_eq!(
         test_tags_1.join(","),
         commands::tags::get_all_tags(&db).unwrap()

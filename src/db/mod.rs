@@ -9,8 +9,9 @@ use crate::db::tables::{
     tags::{create_tag, get_tag_id_by_name, get_tags},
 };
 use anyhow::Result;
-use rusqlite::Connection;
+use rusqlite::{Connection, OpenFlags};
 use rusqlite_migration::{M, Migrations};
+use std::path::Path;
 use tracing::{debug, info};
 
 const MIGRATIONS_SLICE: &[M] = &[M::up(include_str!("migrations/initial.sql"))];
@@ -24,6 +25,10 @@ pub struct File<'a> {
     pub fingerprint_hash: &'a str,
 }
 
+pub enum DatabaseMode {
+    ReadWrite,
+    Read,
+}
 pub struct Database {
     connection: Connection,
 }
@@ -36,11 +41,29 @@ impl Database {
         MIGRATIONS.to_latest(&mut self.connection).unwrap();
     }
 
-    pub fn new(connection: Connection) -> Self {
-        // todo: is it good idea to use migrations here?
-        let mut db = Self { connection };
-        db.apply_migrations();
-        db
+    // todo: the only place where unwrap is used, is it fine?
+    pub fn new(database_mode: &DatabaseMode, database_path: &Path) -> Self {
+        let connection = match database_mode {
+            DatabaseMode::ReadWrite => Connection::open(database_path).unwrap(),
+
+            DatabaseMode::Read => Connection::open_with_flags(
+                database_path,
+                OpenFlags::SQLITE_OPEN_READ_ONLY
+                    | OpenFlags::SQLITE_OPEN_CREATE
+                    | OpenFlags::SQLITE_OPEN_NO_MUTEX
+                    | OpenFlags::SQLITE_OPEN_URI,
+            )
+            .unwrap(),
+        };
+        match database_mode {
+            DatabaseMode::ReadWrite => {
+                // todo: is it good idea to use migrations here?
+                let mut db = Self { connection };
+                db.apply_migrations();
+                db
+            }
+            DatabaseMode::Read => Self { connection },
+        }
     }
 
     pub fn tag_file(&mut self, file: &File, tag_names: Vec<String>) -> Result<()> {
