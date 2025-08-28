@@ -4,25 +4,43 @@ use tracing::debug;
 
 use crate::db::File;
 
-pub fn create_file(tx: &Transaction, file: &File) -> Result<i32> {
+#[allow(unused)]
+#[derive(Debug)]
+pub(in crate::db) struct DbFile {
+    pub id: i32,
+    pub path: String,
+    pub name: String,
+    pub contents_hash: String,
+    pub fingerprint_hash: String,
+}
+
+pub fn create_file(tx: &Transaction, file: &File) -> Result<DbFile> {
     let mut insert = tx.prepare(
         "INSERT INTO files (path, name, contents_hash, fingerprint_hash) 
              VALUES (?1, ?2, ?3, ?4) 
-             RETURNING id",
+             RETURNING id, path, name, contents_hash, fingerprint_hash",
     )?;
 
-    let file_id = insert.query_one(
+    let db_file = insert.query_one(
         (
             file.path,
             file.name,
             file.contents_hash,
             file.fingerprint_hash,
         ),
-        |row| row.get(0),
+        |row| {
+            Ok(DbFile {
+                id: row.get(0)?,
+                path: row.get(1)?,
+                name: row.get(2)?,
+                contents_hash: row.get(3)?,
+                fingerprint_hash: row.get(4)?,
+            })
+        },
     )?;
-    debug!("created file {} with id {file_id}", file.name);
+    debug!("created file {file:?}");
 
-    Ok(file_id)
+    Ok(db_file)
 }
 
 pub fn get_file_id(conn: &Connection, fingerprint_hash: &str) -> Result<Option<i32>> {

@@ -52,9 +52,9 @@ impl Database {
             let tag_id = if let Some(tag_id) = get_tag_id_by_name(&tx, tag_name)? {
                 tag_id
             } else {
-                let tag_id = create_tag(&tx, tag_name)?;
+                let db_tag = create_tag(&tx, tag_name)?;
                 info!("created tag: {tag_name}");
-                tag_id
+                db_tag.id
             };
             debug!("tag_id: {tag_id}");
             db_tags.push(tag_id);
@@ -65,7 +65,8 @@ impl Database {
             debug!("found file_id {file_id}");
             file_id
         } else {
-            create_file(&tx, file)?
+            let db_file = create_file(&tx, file)?;
+            db_file.id
         };
         debug!("file_id: {file_id}");
 

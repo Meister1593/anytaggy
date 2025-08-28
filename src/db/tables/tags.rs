@@ -2,17 +2,29 @@ use anyhow::Result;
 use rusqlite::{Connection, OptionalExtension, Transaction};
 use tracing::debug;
 
-pub fn create_tag(tx: &Transaction, tag_name: &str) -> Result<i32> {
+#[allow(unused)]
+#[derive(Debug)]
+pub(in crate::db) struct DbTag {
+    pub id: i32,
+    pub name: String,
+}
+
+pub fn create_tag(tx: &Transaction, tag_name: &str) -> Result<DbTag> {
     let mut insert = tx.prepare(
         "INSERT INTO tags (name) 
              VALUES (?1) 
-             RETURNING id",
+             RETURNING id, name",
     )?;
 
-    let tag_id = insert.query_one([tag_name], |row| row.get(0))?;
-    debug!("created tag {tag_name} with id {tag_id}");
+    let db_tag = insert.query_one([tag_name], |row| {
+        Ok(DbTag {
+            id: row.get(0)?,
+            name: row.get(1)?,
+        })
+    })?;
+    debug!("created tag {db_tag:?}");
 
-    Ok(tag_id)
+    Ok(db_tag)
 }
 
 pub fn get_tags(conn: &Connection) -> Result<Vec<String>> {

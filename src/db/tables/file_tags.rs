@@ -10,6 +10,7 @@ pub fn reference_file_tag(tx: &Transaction, file_id: i32, tag_id: i32) -> Result
         (file_id, tag_id),
     )?;
     debug!("referenced {file_id} with {tag_id}");
+
     Ok(())
 }
 
@@ -26,6 +27,7 @@ pub fn get_file_tags_by_hash(conn: &Connection, fingerprint_hash: &str) -> Resul
     for tag_name in file_tag_names {
         tags.push(tag_name?);
     }
+
     Ok(tags)
 }
 
@@ -42,6 +44,7 @@ pub fn get_file_tag_ids_by_id(conn: &Connection, file_id: i32) -> Result<Vec<i32
     for tag_id in file_tags {
         tag_ids.push(tag_id?);
     }
+
     Ok(tag_ids)
 }
 
@@ -79,5 +82,6 @@ pub fn get_file_paths_by_tags_and_op(
     for path in file_tags {
         paths.push(path?);
     }
+
     Ok(paths)
 }
