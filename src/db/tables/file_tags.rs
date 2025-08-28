@@ -20,10 +20,10 @@ pub fn get_file_tags_by_hash(conn: &Connection, hash: &str) -> Result<Vec<String
             INNER JOIN files ON file_tags.file_id = files.id
         WHERE files.hash = ?1",
     )?;
-    let file_tags = statement.query_map([&hash], |row| row.get(0))?;
+    let file_tag_names = statement.query_map([&hash], |row| row.get(0))?;
     let mut tags: Vec<String> = Vec::new();
-    for tag in file_tags {
-        tags.push(tag?);
+    for tag_name in file_tag_names {
+        tags.push(tag_name?);
     }
     Ok(tags)
 }
@@ -44,13 +44,16 @@ pub fn get_file_tag_ids_by_id(conn: &Connection, file_id: i32) -> Result<Vec<i32
     Ok(tag_ids)
 }
 
-pub fn get_file_paths_by_tags_and_op(conn: &Connection, tags: Vec<String>) -> Result<Vec<String>> {
-    if tags.is_empty() {
+pub fn get_file_paths_by_tags_and_op(
+    conn: &Connection,
+    tag_names: Vec<String>,
+) -> Result<Vec<String>> {
+    if tag_names.is_empty() {
         return Ok(vec![]);
     }
     let mut fin_tags = vec![];
-    for tag in tags {
-        fin_tags.push(format!("'{tag}'"));
+    for tag_name in tag_names {
+        fin_tags.push(format!("'{tag_name}'"));
     }
     // adapted from: https://dba.stackexchange.com/questions/267559/how-to-filter-multiple-many-to-many-relationship-based-on-multiple-tags#
     let query = format!(

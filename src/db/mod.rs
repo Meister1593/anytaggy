@@ -43,17 +43,17 @@ impl Database {
         db
     }
 
-    pub fn tag_file(&mut self, file: &File, tags: Vec<String>) -> Result<()> {
+    pub fn tag_file(&mut self, file: &File, tag_names: Vec<String>) -> Result<()> {
         let tx = self.connection.transaction()?;
         let mut db_tags = vec![];
 
-        for tag in tags {
-            let tag = tag.trim();
-            let tag_id = if let Some(tag_id) = get_tag_id_by_name(&tx, tag)? {
+        for tag_name in tag_names {
+            let tag_name = tag_name.trim();
+            let tag_id = if let Some(tag_id) = get_tag_id_by_name(&tx, tag_name)? {
                 tag_id
             } else {
-                let tag_id = create_tag(&tx, tag)?;
-                info!("created tag: {tag}");
+                let tag_id = create_tag(&tx, tag_name)?;
+                info!("created tag: {tag_name}");
                 tag_id
             };
             debug!("tag_id: {tag_id}");
@@ -85,8 +85,8 @@ impl Database {
         get_file_tags_by_hash(&self.connection, hash)
     }
 
-    pub fn get_files_by_tag(&self, tags: Vec<String>) -> Result<Vec<String>> {
-        get_file_paths_by_tags_and_op(&self.connection, tags)
+    pub fn get_files_by_tag(&self, tag_names: Vec<String>) -> Result<Vec<String>> {
+        get_file_paths_by_tags_and_op(&self.connection, tag_names)
     }
 
     pub fn get_all_tags(&self) -> Result<Vec<String>> {
