@@ -2,7 +2,8 @@ mod tables;
 
 use crate::db::tables::{
     file_tags::{
-        get_file_tag_ids_by_id, get_file_tags_by_hash, get_file_paths_by_tags, reference_file_tag,
+        get_file_paths_by_tags_and_op, get_file_tag_ids_by_id, get_file_tags_by_hash,
+        reference_file_tag,
     },
     files::{create_file, get_file_id},
     tags::{create_tag, get_tag_id_by_name},
@@ -82,6 +83,6 @@ impl Database {
     }
 
     pub fn get_files_by_tag(&self, tags: Vec<String>) -> Result<Vec<String>> {
-        get_file_paths_by_tags(&self.connection, tags)
+        get_file_paths_by_tags_and_op(&self.connection, tags)
     }
 }

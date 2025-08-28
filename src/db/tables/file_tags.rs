@@ -42,8 +42,7 @@ pub fn get_file_tag_ids_by_id(conn: &Connection, file_id: i32) -> Result<Vec<i32
     Ok(tag_ids)
 }
 
-pub fn get_file_paths_by_tags(conn: &Connection, tags: Vec<String>) -> Result<Vec<String>> {
-    // source: https://dba.stackexchange.com/questions/267559/how-to-filter-multiple-many-to-many-relationship-based-on-multiple-tags#
+pub fn get_file_paths_by_tags_and_op(conn: &Connection, tags: Vec<String>) -> Result<Vec<String>> {
     if tags.is_empty() {
         return Ok(vec![]);
     }
@@ -51,6 +50,7 @@ pub fn get_file_paths_by_tags(conn: &Connection, tags: Vec<String>) -> Result<Ve
     for tag in tags {
         fin_tags.push(format!("'{tag}'"));
     }
+    // adapted from: https://dba.stackexchange.com/questions/267559/how-to-filter-multiple-many-to-many-relationship-based-on-multiple-tags#
     let query = format!(
         "
         select f.path
