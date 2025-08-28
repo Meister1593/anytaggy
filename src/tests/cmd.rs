@@ -14,8 +14,8 @@ fn tag_and_files_cmd() {
     let db_path = temp_dir.path().join("tmp_db.db");
     let tag_file_1 = super::create_random_file(temp_dir.path(), "temp_tag_file_1");
     let tag_file_2 = super::create_random_file(temp_dir.path(), "temp_tag_file_2");
-    let test_tags = "test";
-    let test_files = format!("{}\n{}\n", tag_file_1.display(), tag_file_2.display());
+    let test_tags_1: Vec<String> = vec!["test".into(), "test2".into(), "test3".into()];
+    let test_tags_2: Vec<String> = vec!["test3".into(), "test4".into(), "test5".into()];
 
     let mut cmd = cargo_bin_cmd();
     let assert = cmd
@@ -24,7 +24,7 @@ fn tag_and_files_cmd() {
         .arg("tag")
         .arg(&tag_file_1)
         .arg("--tags")
-        .arg(test_tags)
+        .arg(test_tags_1.join(","))
         .assert();
     assert.success();
 
@@ -35,7 +35,7 @@ fn tag_and_files_cmd() {
         .arg("tag")
         .arg(&tag_file_2)
         .arg("--tags")
-        .arg(test_tags)
+        .arg(test_tags_2.join(","))
         .assert();
     assert.success();
 
@@ -44,9 +44,44 @@ fn tag_and_files_cmd() {
         .arg("--database-path")
         .arg(&db_path)
         .arg("files")
-        .arg(test_tags)
+        .arg("test3")
         .assert();
-    assert.success().stdout(predicate::eq(test_files));
+    assert.success().stdout(predicate::eq(format!(
+        "{}\n{}\n",
+        tag_file_1.display(),
+        tag_file_2.display()
+    )));
+
+    let mut cmd = cargo_bin_cmd();
+    let assert = cmd
+        .arg("--database-path")
+        .arg(&db_path)
+        .arg("files")
+        .arg("test")
+        .assert();
+    assert
+        .success()
+        .stdout(predicate::eq(format!("{}\n", tag_file_1.display())));
+
+    let mut cmd = cargo_bin_cmd();
+    let assert = cmd
+        .arg("--database-path")
+        .arg(&db_path)
+        .arg("files")
+        .arg("test4")
+        .assert();
+    assert
+        .success()
+        .stdout(predicate::eq(format!("{}\n", tag_file_2.display())));
+
+    let mut cmd = cargo_bin_cmd();
+    let assert = cmd
+        .arg("--database-path")
+        .arg(&db_path)
+        .arg("files")
+        .arg([&test_tags_1[..], &test_tags_2[..]].concat().join(" "))
+        .assert();
+    assert.success().stdout(predicate::eq("\n"));
 }
 
 #[test]

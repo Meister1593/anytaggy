@@ -45,17 +45,31 @@ fn tag_and_files() {
     let db_path = temp_dir.path().join("tmp_db.db");
     let tag_file_1 = create_random_file(temp_dir.path(), "temp_tag_file_1");
     let tag_file_2 = create_random_file(temp_dir.path(), "temp_tag_file_2");
-    let test_tags: Vec<String> = vec!["test".into()];
-    let test_files = format!("{}\n{}", tag_file_1.display(), tag_file_2.display());
+    let test_tags_1: Vec<String> = vec!["test".into(), "test2".into(), "test3".into()];
+    let test_tags_2: Vec<String> = vec!["test3".into(), "test4".into(), "test5".into()];
 
     // Database preparation
     let connection = Connection::open(db_path).unwrap();
     let mut db = Database::new(connection);
 
-    commands::tag::tag(&mut db, &tag_file_1, test_tags.clone()).unwrap();
-    commands::tag::tag(&mut db, &tag_file_2, test_tags.clone()).unwrap();
-    let files = commands::files::files(&db, test_tags).unwrap();
-    assert_eq!(test_files, files);
+    commands::tag::tag(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
+    commands::tag::tag(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
+    assert_eq!(
+        format!("{}\n{}", tag_file_1.display(), tag_file_2.display()),
+        commands::files::files(&db, vec!["test3".into()]).unwrap()
+    );
+    assert_eq!(
+        tag_file_1.display().to_string(),
+        commands::files::files(&db, vec!["test".into(), "test2".into()]).unwrap()
+    );
+    assert_eq!(
+        tag_file_2.display().to_string(),
+        commands::files::files(&db, vec!["test4".into()]).unwrap()
+    );
+    assert_eq!(
+        "",
+        commands::files::files(&db, [&test_tags_1[..], &test_tags_2[..]].concat()).unwrap()
+    );
 }
 
 // todo: test cases with trimming to be added
