@@ -32,7 +32,7 @@ enum Command {
         tags: Vec<String>,
     },
     Tags {
-        file_path: PathBuf,
+        file_path: Option<PathBuf>,
     },
 
     Files {
@@ -52,14 +52,18 @@ fn main() -> anyhow::Result<()> {
     let mut db = Database::new(conn);
 
     match parse.command {
-        Command::Tag { file_path, tags } => commands::tag::tag(&mut db, &file_path, tags),
+        Command::Tag { file_path, tags } => commands::tag::tag_file(&mut db, &file_path, tags),
         Command::Tags { file_path } => {
-            println!("{}", commands::tags::tags(&db, &file_path)?);
+            if let Some(file_path) = file_path {
+                println!("{}", commands::tags::get_file_tags(&db, &file_path)?);
+            } else {
+                println!("{}", commands::tags::get_all_tags(&db)?);
+            }
 
             Ok(())
         }
         Command::Files { tags } => {
-            println!("{}", commands::files::files(&db, tags)?);
+            println!("{}", commands::files::get_file_paths(&db, tags)?);
 
             Ok(())
         }

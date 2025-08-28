@@ -39,8 +39,8 @@ fn tag_file() {
     let connection = Connection::open(db_path).unwrap();
     let mut db = Database::new(connection);
 
-    commands::tag::tag(&mut db, &tag_file, test_tags.clone()).unwrap();
-    let tags = commands::tags::tags(&db, &tag_file).unwrap();
+    commands::tag::tag_file(&mut db, &tag_file, test_tags.clone()).unwrap();
+    let tags = commands::tags::get_file_tags(&db, &tag_file).unwrap();
     assert_eq!(test_tags.join(","), tags);
 }
 
@@ -55,11 +55,11 @@ fn files_joined_tag() {
     let connection = Connection::open(db_path).unwrap();
     let mut db = Database::new(connection);
 
-    commands::tag::tag(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
-    commands::tag::tag(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
+    commands::tag::tag_file(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
+    commands::tag::tag_file(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
     assert_eq!(
         format!("{}\n{}", tag_file_1.display(), tag_file_2.display()),
-        commands::files::files(&db, vec!["test3".into()]).unwrap()
+        commands::files::get_file_paths(&db, vec!["test3".into()]).unwrap()
     );
 }
 
@@ -74,11 +74,11 @@ fn files_left_tag() {
     let connection = Connection::open(db_path).unwrap();
     let mut db = Database::new(connection);
 
-    commands::tag::tag(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
-    commands::tag::tag(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
+    commands::tag::tag_file(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
+    commands::tag::tag_file(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
     assert_eq!(
         tag_file_1.display().to_string(),
-        commands::files::files(&db, vec!["test".into(), "test2".into()]).unwrap()
+        commands::files::get_file_paths(&db, vec!["test".into(), "test2".into()]).unwrap()
     );
 }
 
@@ -93,11 +93,11 @@ fn files_right_tag() {
     let connection = Connection::open(db_path).unwrap();
     let mut db = Database::new(connection);
 
-    commands::tag::tag(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
-    commands::tag::tag(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
+    commands::tag::tag_file(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
+    commands::tag::tag_file(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
     assert_eq!(
         tag_file_2.display().to_string(),
-        commands::files::files(&db, vec!["test4".into()]).unwrap()
+        commands::files::get_file_paths(&db, vec!["test4".into()]).unwrap()
     );
 }
 
@@ -112,11 +112,29 @@ fn files_neither_tag() {
     let connection = Connection::open(db_path).unwrap();
     let mut db = Database::new(connection);
 
-    commands::tag::tag(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
-    commands::tag::tag(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
+    commands::tag::tag_file(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
+    commands::tag::tag_file(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
     assert_eq!(
         "",
-        commands::files::files(&db, [&test_tags_1[..], &test_tags_2[..]].concat()).unwrap()
+        commands::files::get_file_paths(&db, [&test_tags_1[..], &test_tags_2[..]].concat())
+            .unwrap()
+    );
+}
+
+#[test]
+fn get_tags() {
+    // Test data
+    let temp_dir = TempDir::new().unwrap();
+    let (db_path, tag_file_1, _, test_tags_1, _) = two_files_multiple_tags_prepare(&temp_dir);
+
+    // Database preparation
+    let connection = Connection::open(db_path).unwrap();
+    let mut db = Database::new(connection);
+
+    commands::tag::tag_file(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
+    assert_eq!(
+        test_tags_1.join(","),
+        commands::tags::get_all_tags(&db).unwrap()
     );
 }
 

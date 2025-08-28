@@ -6,7 +6,7 @@ use tracing::debug;
 use crate::db::Database;
 use crate::db::File;
 
-pub fn tag(db: &mut Database, file_path: &Path, tags: Vec<String>) -> Result<()> {
+pub fn tag_file(db: &mut Database, file_path: &Path, tags: Vec<String>) -> Result<()> {
     let name = file_path
         .file_name()
         .context("couldn't retrieve file name from path")?

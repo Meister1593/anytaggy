@@ -6,7 +6,7 @@ use crate::db::tables::{
         reference_file_tag,
     },
     files::{create_file, get_file_id},
-    tags::{create_tag, get_tag_id_by_name},
+    tags::{create_tag, get_tag_id_by_name, get_tags},
 };
 use anyhow::Result;
 use rusqlite::Connection;
@@ -87,5 +87,9 @@ impl Database {
 
     pub fn get_files_by_tag(&self, tags: Vec<String>) -> Result<Vec<String>> {
         get_file_paths_by_tags_and_op(&self.connection, tags)
+    }
+
+    pub fn get_all_tags(&self) -> Result<Vec<String>> {
+        get_tags(&self.connection)
     }
 }

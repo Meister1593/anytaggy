@@ -8,11 +8,21 @@ pub fn create_tag(tx: &Transaction, tag: &str) -> Result<i32> {
                 VALUES (?1) 
                 RETURNING id",
     )?;
-    
+
     let tag_id = insert.query_one([tag], |row| row.get(0))?;
     debug!("created tag {tag} with id {tag_id}");
 
     Ok(tag_id)
+}
+
+pub fn get_tags(conn: &Connection) -> Result<Vec<String>> {
+    let mut query = conn.prepare("SELECT name FROM tags")?;
+    let mut tags: Vec<String> = Vec::new();
+    for tag in query.query_map([], |row| row.get(0))? {
+        tags.push(tag?);
+    }
+
+    Ok(tags)
 }
 
 pub fn get_tag_id_by_name(conn: &Connection, tag: &str) -> Result<Option<i32>> {
