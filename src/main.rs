@@ -32,6 +32,9 @@ enum Command {
 
         #[arg(short, long, value_parser = NonEmptyStringValueParser::new(), value_delimiter=',')]
         tags: Vec<String>,
+
+        #[arg(short, long)]
+        delete: bool,
     },
     Tags {
         file_path: Option<PathBuf>,
@@ -52,10 +55,14 @@ fn main() -> anyhow::Result<ExitCode> {
     let parse = Args::parse();
 
     match parse.command {
-        Command::Tag { file_path, tags } => {
+        Command::Tag {
+            file_path,
+            tags,
+            delete,
+        } => {
             let mut db = Database::new(&DatabaseMode::ReadWrite, &parse.database_path);
 
-            commands::tag::tag_file(&mut db, &file_path, tags)?;
+            commands::tag::tag_file(&mut db, &file_path, &tags, delete)?;
 
             Ok(ExitCode::SUCCESS)
         }

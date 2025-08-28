@@ -6,7 +6,12 @@ use tracing::debug;
 use crate::db::Database;
 use crate::db::File;
 
-pub fn tag_file(db: &mut Database, file_path: &Path, tag_names: Vec<String>) -> Result<()> {
+pub fn tag_file(
+    db: &mut Database,
+    file_path: &Path,
+    tag_names: &[String],
+    delete: bool,
+) -> Result<()> {
     let name = file_path
         .file_name()
         .context("couldn't retrieve file name from path")?
@@ -25,15 +30,17 @@ pub fn tag_file(db: &mut Database, file_path: &Path, tag_names: Vec<String>) -> 
     let fingerprint_hash = super::get_fingerprint_hash(&contents_hash, path)?;
     debug!("fingerprint_hash: {fingerprint_hash}");
 
-    db.tag_file(
-        &File {
-            path,
-            name,
-            contents_hash: &contents_hash,
-            fingerprint_hash: &fingerprint_hash,
-        },
-        tag_names,
-    )?;
+    let file = File {
+        path,
+        name,
+        contents_hash: &contents_hash,
+        fingerprint_hash: &fingerprint_hash,
+    };
+    if delete {
+        db.delete_tags_from_file(&file, tag_names);
+    } else {
+        db.tag_file(&file, tag_names)?;
+    }
 
     Ok(())
 }

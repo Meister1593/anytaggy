@@ -49,7 +49,6 @@ impl Database {
             DatabaseMode::Read => Connection::open_with_flags(
                 database_path,
                 OpenFlags::SQLITE_OPEN_READ_ONLY
-                    | OpenFlags::SQLITE_OPEN_CREATE
                     | OpenFlags::SQLITE_OPEN_NO_MUTEX
                     | OpenFlags::SQLITE_OPEN_URI,
             )
@@ -66,7 +65,7 @@ impl Database {
         }
     }
 
-    pub fn tag_file(&mut self, file: &File, tag_names: Vec<String>) -> Result<()> {
+    pub fn tag_file(&mut self, file: &File, tag_names: &[String]) -> Result<()> {
         let tx = self.connection.transaction()?;
         let mut db_tags = vec![];
 
@@ -115,5 +114,9 @@ impl Database {
 
     pub fn get_all_tags(&self) -> Result<Vec<String>> {
         get_tags(&self.connection)
+    }
+
+    pub fn delete_tags_from_file(&mut self, file: &File, tag_names: &[String]) {
+        todo!()
     }
 }
