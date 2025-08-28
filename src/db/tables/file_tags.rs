@@ -60,7 +60,6 @@ pub fn get_file_paths_by_tags_and_op(
         .iter()
         .map(|tag_name| format!("'{tag_name}'"))
         .collect();
-    let tag_names_string = tag_names.join(",");
     // adapted from: https://dba.stackexchange.com/questions/267559/how-to-filter-multiple-many-to-many-relationship-based-on-multiple-tags#
     let query = format!(
         "
@@ -70,10 +69,11 @@ pub fn get_file_paths_by_tags_and_op(
             SELECT ft.file_id
             FROM file_tags ft
                 INNER JOIN tags t on ft.tag_id = t.id
-            WHERE t.name IN ({tag_names_string})
+            WHERE t.name IN ({})
             GROUP BY ft.file_id
             HAVING COUNT(*) = {}
             )",
+        tag_names.join(","),
         tag_names.len()
     );
     let mut statement = conn.prepare(&query)?;
