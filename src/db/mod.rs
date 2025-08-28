@@ -21,7 +21,7 @@ pub struct File<'a> {
     pub path: &'a str,
     pub name: &'a str,
     pub contents_hash: &'a str,
-    pub hash: &'a str,
+    pub fingerprint_hash: &'a str,
 }
 
 pub struct Database {
@@ -61,7 +61,7 @@ impl Database {
         }
 
         // todo: this looks kinda ugly, might be better to use unwrap_or_else (but then no automatic ?)
-        let file_id = if let Some(file_id) = get_file_id(&tx, file.hash)? {
+        let file_id = if let Some(file_id) = get_file_id(&tx, file.fingerprint_hash)? {
             debug!("found file_id {file_id}");
             file_id
         } else {
@@ -81,8 +81,8 @@ impl Database {
         Ok(())
     }
 
-    pub fn get_file_tags(&self, hash: &str) -> Result<Vec<String>> {
-        get_file_tags_by_hash(&self.connection, hash)
+    pub fn get_file_tags(&self, fingerprint_hash: &str) -> Result<Vec<String>> {
+        get_file_tags_by_hash(&self.connection, fingerprint_hash)
     }
 
     pub fn get_files_by_tag(&self, tag_names: Vec<String>) -> Result<Vec<String>> {

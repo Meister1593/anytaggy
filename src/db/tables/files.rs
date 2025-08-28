@@ -6,13 +6,18 @@ use crate::db::File;
 
 pub fn create_file(tx: &Transaction, file: &File) -> Result<i32> {
     let mut insert = tx.prepare(
-        "INSERT INTO files (path, name, contents_hash, hash) 
+        "INSERT INTO files (path, name, contents_hash, fingeprint_hash) 
                         VALUES (?1, ?2, ?3, ?4) 
                         RETURNING id",
     )?;
-    
+
     let file_id = insert.query_one(
-        (file.path, file.name, file.contents_hash, file.hash),
+        (
+            file.path,
+            file.name,
+            file.contents_hash,
+            file.fingerprint_hash,
+        ),
         |row| row.get(0),
     )?;
     debug!("created file {} with id {file_id}", file.name);
@@ -20,11 +25,13 @@ pub fn create_file(tx: &Transaction, file: &File) -> Result<i32> {
     Ok(file_id)
 }
 
-pub fn get_file_id(conn: &Connection, hash: &str) -> Result<Option<i32>> {
+pub fn get_file_id(conn: &Connection, fingerprint_hash: &str) -> Result<Option<i32>> {
     let mut select = conn.prepare(
         "SELECT id FROM files 
-            WHERE hash = ?1",
+            WHERE fingerprint_hash = ?1",
     )?;
 
-    Ok(select.query_one([&hash], |row| row.get(0)).optional()?)
+    Ok(select
+        .query_one([&fingerprint_hash], |row| row.get(0))
+        .optional()?)
 }

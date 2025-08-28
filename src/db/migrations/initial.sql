@@ -3,7 +3,7 @@ CREATE TABLE files (
     path VARCHAR(2000) NOT NULL,
     name VARCHAR(2000) NOT NULL,
     contents_hash TEXT UNIQUE NOT NULL,
-    hash TEXT UNIQUE NOT NULL
+    fingerprint_hash TEXT UNIQUE NOT NULL
 );
 
 CREATE TABLE tags (

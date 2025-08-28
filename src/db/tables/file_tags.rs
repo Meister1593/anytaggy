@@ -12,15 +12,15 @@ pub fn reference_file_tag(tx: &Transaction, file_id: i32, tag_id: i32) -> Result
     Ok(())
 }
 
-pub fn get_file_tags_by_hash(conn: &Connection, hash: &str) -> Result<Vec<String>> {
+pub fn get_file_tags_by_hash(conn: &Connection, fingerprint_hash: &str) -> Result<Vec<String>> {
     let mut statement = conn.prepare(
         "SELECT t.name 
         FROM tags t 
             INNER JOIN file_tags ON file_tags.tag_id = t.id 
             INNER JOIN files ON file_tags.file_id = files.id
-        WHERE files.hash = ?1",
+        WHERE files.fingerprint_hash = ?1",
     )?;
-    let file_tag_names = statement.query_map([&hash], |row| row.get(0))?;
+    let file_tag_names = statement.query_map([&fingerprint_hash], |row| row.get(0))?;
     let mut tags: Vec<String> = Vec::new();
     for tag_name in file_tag_names {
         tags.push(tag_name?);
