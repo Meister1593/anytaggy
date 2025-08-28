@@ -16,6 +16,14 @@ use tracing::{debug, info};
 const MIGRATIONS_SLICE: &[M] = &[M::up(include_str!("migrations/initial.sql"))];
 const MIGRATIONS: Migrations = Migrations::from_slice(MIGRATIONS_SLICE);
 
+#[derive(Debug, Clone)]
+pub struct File<'a> {
+    pub path: &'a str,
+    pub name: &'a str,
+    pub contents_hash: &'a str,
+    pub hash: &'a str,
+}
+
 pub struct Database {
     connection: Connection,
 }
@@ -35,15 +43,10 @@ impl Database {
         db
     }
 
-    pub fn tag_file(
-        &mut self,
-        file_path: &str,
-        file_name: &str,
-        hash: &str,
-        tags: Vec<String>,
-    ) -> Result<()> {
+    pub fn tag_file(&mut self, file: &File, tags: Vec<String>) -> Result<()> {
         let tx = self.connection.transaction()?;
         let mut db_tags = vec![];
+
         for tag in tags {
             let tag = tag.trim();
             let tag_id = if let Some(tag_id) = get_tag_id_by_name(&tx, tag)? {
@@ -58,11 +61,11 @@ impl Database {
         }
 
         // todo: this looks kinda ugly, might be better to use unwrap_or_else (but then no automatic ?)
-        let file_id = if let Some(file_id) = get_file_id(&tx, hash)? {
+        let file_id = if let Some(file_id) = get_file_id(&tx, file.hash)? {
             debug!("found file_id {file_id}");
             file_id
         } else {
-            create_file(&tx, file_path, file_name, hash)?
+            create_file(&tx, file)?
         };
         debug!("file_id: {file_id}");
 

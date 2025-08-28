@@ -1,19 +1,39 @@
 use anyhow::Context;
 use anyhow::Result;
 use std::path::Path;
+use tracing::debug;
 
 use crate::db::Database;
+use crate::db::File;
 
 pub fn tag(db: &mut Database, file_path: &Path, tags: Vec<String>) -> Result<()> {
-    let file_name = file_path
+    let name = file_path
         .file_name()
         .context("couldn't retrieve file name from path")?
-        .display()
-        .to_string();
-    let hash = super::get_file_hash(file_path)?;
-    let file_path = file_path.display().to_string();
+        .to_str()
+        .context("couldn't convert file name to str")?;
+    debug!("name: {name}");
 
-    db.tag_file(&file_path, &file_name, &hash, tags)?;
+    let path = file_path
+        .to_str()
+        .context("couldn't convert file path to str")?;
+    debug!("path: {path}");
+
+    let contents_hash = super::get_file_contents_hash(file_path)?;
+    debug!("contents_hash: {contents_hash}");
+
+    let hash = super::get_file_hash(&contents_hash, path)?;
+    debug!("hash: {hash}");
+
+    db.tag_file(
+        &File {
+            path,
+            name,
+            contents_hash: &contents_hash,
+            hash: &hash,
+        },
+        tags,
+    )?;
 
     Ok(())
 }

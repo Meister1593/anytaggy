@@ -49,17 +49,18 @@ fn main() -> anyhow::Result<()> {
 
     let parse = Args::parse();
     let conn = Connection::open(parse.database_path)?;
-
     let mut db = Database::new(conn);
 
     match parse.command {
         Command::Tag { file_path, tags } => commands::tag::tag(&mut db, &file_path, tags),
         Command::Tags { file_path } => {
             println!("{}", commands::tags::tags(&db, &file_path)?);
+
             Ok(())
         }
         Command::Files { tags } => {
             println!("{}", commands::files::files(&db, tags)?);
+
             Ok(())
         }
     }?;

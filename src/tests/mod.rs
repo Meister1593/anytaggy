@@ -18,16 +18,22 @@ pub(super) fn create_random_file(dir_path: &Path, name: &str) -> PathBuf {
     tag_file
 }
 
+pub(super) fn two_files_multiple_tags_prepare(
+    temp_dir: &TempDir,
+) -> (PathBuf, PathBuf, PathBuf, Vec<String>, Vec<String>) {
+    let db_path = temp_dir.path().join("tmp_db.db");
+    let tag_file_1 = create_random_file(temp_dir.path(), "temp_tag_file_1");
+    let tag_file_2 = create_random_file(temp_dir.path(), "temp_tag_file_2");
+    let test_tags_1: Vec<String> = vec!["test".into(), "test2".into(), "test3".into()];
+    let test_tags_2: Vec<String> = vec!["test3".into(), "test4".into(), "test5".into()];
+    (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2)
+}
+
 #[test]
 fn tag_file() {
     // Test data
     let temp_dir = TempDir::new().unwrap();
-    let db_path = temp_dir.path().join("tmp_db.db");
-    let tag_file = temp_dir.path().join("temp_tag_file");
-    let mut file = File::create(&tag_file).unwrap();
-    let mut rng = rand::rng();
-    file.write_all(&rng.random::<u128>().to_le_bytes()).unwrap();
-    let test_tags: Vec<String> = vec!["test".into(), "test2".into(), "test3".into()];
+    let (db_path, tag_file, _, test_tags, _) = two_files_multiple_tags_prepare(&temp_dir);
 
     // Database preparation
     let connection = Connection::open(db_path).unwrap();
@@ -39,14 +45,11 @@ fn tag_file() {
 }
 
 #[test]
-fn tag_and_files() {
+fn files_joined_tag() {
     // Test data
     let temp_dir = TempDir::new().unwrap();
-    let db_path = temp_dir.path().join("tmp_db.db");
-    let tag_file_1 = create_random_file(temp_dir.path(), "temp_tag_file_1");
-    let tag_file_2 = create_random_file(temp_dir.path(), "temp_tag_file_2");
-    let test_tags_1: Vec<String> = vec!["test".into(), "test2".into(), "test3".into()];
-    let test_tags_2: Vec<String> = vec!["test3".into(), "test4".into(), "test5".into()];
+    let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
+        two_files_multiple_tags_prepare(&temp_dir);
 
     // Database preparation
     let connection = Connection::open(db_path).unwrap();
@@ -58,14 +61,59 @@ fn tag_and_files() {
         format!("{}\n{}", tag_file_1.display(), tag_file_2.display()),
         commands::files::files(&db, vec!["test3".into()]).unwrap()
     );
+}
+
+#[test]
+fn files_left_tag() {
+    // Test data
+    let temp_dir = TempDir::new().unwrap();
+    let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
+        two_files_multiple_tags_prepare(&temp_dir);
+
+    // Database preparation
+    let connection = Connection::open(db_path).unwrap();
+    let mut db = Database::new(connection);
+
+    commands::tag::tag(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
+    commands::tag::tag(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
     assert_eq!(
         tag_file_1.display().to_string(),
         commands::files::files(&db, vec!["test".into(), "test2".into()]).unwrap()
     );
+}
+
+#[test]
+fn files_right_tag() {
+    // Test data
+    let temp_dir = TempDir::new().unwrap();
+    let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
+        two_files_multiple_tags_prepare(&temp_dir);
+
+    // Database preparation
+    let connection = Connection::open(db_path).unwrap();
+    let mut db = Database::new(connection);
+
+    commands::tag::tag(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
+    commands::tag::tag(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
     assert_eq!(
         tag_file_2.display().to_string(),
         commands::files::files(&db, vec!["test4".into()]).unwrap()
     );
+}
+
+#[test]
+fn files_neither_tag() {
+    // Test data
+    let temp_dir = TempDir::new().unwrap();
+    let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
+        two_files_multiple_tags_prepare(&temp_dir);
+
+    // Database preparation
+    let connection = Connection::open(db_path).unwrap();
+    let mut db = Database::new(connection);
+
+    commands::tag::tag(&mut db, &tag_file_1, test_tags_1.clone()).unwrap();
+    commands::tag::tag(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
     assert_eq!(
         "",
         commands::files::files(&db, [&test_tags_1[..], &test_tags_2[..]].concat()).unwrap()
