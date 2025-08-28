@@ -5,8 +5,8 @@ use tracing::debug;
 pub fn create_tag(tx: &Transaction, tag_name: &str) -> Result<i32> {
     let mut insert = tx.prepare(
         "INSERT INTO tags (name) 
-                VALUES (?1) 
-                RETURNING id",
+             VALUES (?1) 
+             RETURNING id",
     )?;
 
     let tag_id = insert.query_one([tag_name], |row| row.get(0))?;
@@ -28,7 +28,7 @@ pub fn get_tags(conn: &Connection) -> Result<Vec<String>> {
 pub fn get_tag_id_by_name(conn: &Connection, tag_name: &str) -> Result<Option<i32>> {
     let mut query = conn.prepare(
         "SELECT id FROM tags 
-            WHERE name = ?1",
+             WHERE name = ?1",
     )?;
 
     Ok(query.query_one([tag_name], |row| row.get(0)).optional()?)

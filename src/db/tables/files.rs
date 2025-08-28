@@ -6,9 +6,9 @@ use crate::db::File;
 
 pub fn create_file(tx: &Transaction, file: &File) -> Result<i32> {
     let mut insert = tx.prepare(
-        "INSERT INTO files (path, name, contents_hash, fingeprint_hash) 
-                        VALUES (?1, ?2, ?3, ?4) 
-                        RETURNING id",
+        "INSERT INTO files (path, name, contents_hash, fingerprint_hash) 
+             VALUES (?1, ?2, ?3, ?4) 
+             RETURNING id",
     )?;
 
     let file_id = insert.query_one(
@@ -27,7 +27,8 @@ pub fn create_file(tx: &Transaction, file: &File) -> Result<i32> {
 
 pub fn get_file_id(conn: &Connection, fingerprint_hash: &str) -> Result<Option<i32>> {
     let mut select = conn.prepare(
-        "SELECT id FROM files 
+        "SELECT id 
+            FROM files 
             WHERE fingerprint_hash = ?1",
     )?;
 

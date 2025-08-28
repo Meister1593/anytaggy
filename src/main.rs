@@ -63,7 +63,7 @@ fn main() -> anyhow::Result<()> {
             Ok(())
         }
         Command::Files { tags } => {
-            println!("{}", commands::files::get_file_paths(&db, tags)?);
+            println!("{}", commands::files::get_file_paths(&db, &tags)?);
 
             Ok(())
         }

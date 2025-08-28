@@ -5,7 +5,8 @@ use tracing::debug;
 
 pub fn reference_file_tag(tx: &Transaction, file_id: i32, tag_id: i32) -> Result<()> {
     tx.execute(
-        "INSERT INTO file_tags (file_id, tag_id) VALUES (?1, ?2)",
+        "INSERT INTO file_tags (file_id, tag_id) 
+             VALUES (?1, ?2)",
         (file_id, tag_id),
     )?;
     debug!("referenced {file_id} with {tag_id}");
@@ -46,15 +47,17 @@ pub fn get_file_tag_ids_by_id(conn: &Connection, file_id: i32) -> Result<Vec<i32
 
 pub fn get_file_paths_by_tags_and_op(
     conn: &Connection,
-    tag_names: Vec<String>,
+    tag_names: &[String],
 ) -> Result<Vec<String>> {
     if tag_names.is_empty() {
         return Ok(vec![]);
     }
-    let mut fin_tags = vec![];
-    for tag_name in tag_names {
-        fin_tags.push(format!("'{tag_name}'"));
-    }
+
+    let tag_names: Vec<String> = tag_names
+        .iter()
+        .map(|tag_name| format!("'{tag_name}'"))
+        .collect();
+    let tag_names_string = tag_names.join(",");
     // adapted from: https://dba.stackexchange.com/questions/267559/how-to-filter-multiple-many-to-many-relationship-based-on-multiple-tags#
     let query = format!(
         "
@@ -64,12 +67,11 @@ pub fn get_file_paths_by_tags_and_op(
             SELECT ft.file_id
             FROM file_tags ft
                 INNER JOIN tags t on ft.tag_id = t.id
-            WHERE t.name IN ({})
+            WHERE t.name IN ({tag_names_string})
             GROUP BY ft.file_id
             HAVING COUNT(*) = {}
             )",
-        fin_tags.join(","),
-        fin_tags.len()
+        tag_names.len()
     );
     let mut statement = conn.prepare(&query)?;
     let file_tags = statement.query_map([], |row| row.get(0))?;

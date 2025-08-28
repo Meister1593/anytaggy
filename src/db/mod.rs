@@ -85,7 +85,7 @@ impl Database {
         get_file_tags_by_hash(&self.connection, fingerprint_hash)
     }
 
-    pub fn get_files_by_tag(&self, tag_names: Vec<String>) -> Result<Vec<String>> {
+    pub fn get_files_by_tag(&self, tag_names: &[String]) -> Result<Vec<String>> {
         get_file_paths_by_tags_and_op(&self.connection, tag_names)
     }
 

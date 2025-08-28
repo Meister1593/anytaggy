@@ -59,7 +59,7 @@ fn files_joined_tag() {
     commands::tag::tag_file(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
     assert_eq!(
         format!("{}\n{}", tag_file_1.display(), tag_file_2.display()),
-        commands::files::get_file_paths(&db, vec!["test3".into()]).unwrap()
+        commands::files::get_file_paths(&db, &["test3".into()]).unwrap()
     );
 }
 
@@ -78,7 +78,7 @@ fn files_left_tag() {
     commands::tag::tag_file(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
     assert_eq!(
         tag_file_1.display().to_string(),
-        commands::files::get_file_paths(&db, vec!["test".into(), "test2".into()]).unwrap()
+        commands::files::get_file_paths(&db, &["test".into(), "test2".into()]).unwrap()
     );
 }
 
@@ -97,7 +97,7 @@ fn files_right_tag() {
     commands::tag::tag_file(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
     assert_eq!(
         tag_file_2.display().to_string(),
-        commands::files::get_file_paths(&db, vec!["test4".into()]).unwrap()
+        commands::files::get_file_paths(&db, &["test4".into()]).unwrap()
     );
 }
 
@@ -116,7 +116,7 @@ fn files_neither_tag() {
     commands::tag::tag_file(&mut db, &tag_file_2, test_tags_2.clone()).unwrap();
     assert_eq!(
         "",
-        commands::files::get_file_paths(&db, [&test_tags_1[..], &test_tags_2[..]].concat())
+        commands::files::get_file_paths(&db, &[&test_tags_1[..], &test_tags_2[..]].concat())
             .unwrap()
     );
 }
