@@ -60,6 +60,12 @@ fn main() -> anyhow::Result<ExitCode> {
             tags,
             delete,
         } => {
+            if tags.is_empty(){
+                println!("ERROR: No tags specified");
+
+                return Ok(ExitCode::FAILURE);
+            }
+
             let mut db = Database::new(&DatabaseMode::ReadWrite, &parse.database_path);
 
             commands::tag::tag_file(&mut db, &file_path, &tags, delete)?;
