@@ -151,7 +151,7 @@ impl Database {
         Ok(())
     }
 
-    pub(crate) fn get_files(&self) -> Result<Vec<String>> {
+    pub fn get_files(&self) -> Result<Vec<String>> {
         get_all_files_path(&self.connection)
     }
 }

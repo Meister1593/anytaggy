@@ -261,8 +261,7 @@ fn files_clean_after_unreference() {
     let assert = cmd
         .arg("--database-path")
         .arg(&db_path)
-        .arg("tags")
-        .arg(&tag_file)
+        .arg("files")
         .assert();
     assert.success().stdout("\n".to_string());
 }
