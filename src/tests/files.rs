@@ -1,7 +1,18 @@
-use std::process::ExitCode;
+use std::{path::PathBuf, process::ExitCode};
 
 use crate::{Args, entrypoint};
 use temp_dir::TempDir;
+
+#[test]
+fn no_files_database() {
+    let args = Args {
+        database_path: PathBuf::new(),
+        command: crate::Command::Files { tags: None },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(Some("ERROR: Database file could not be found".into()), out);
+    assert_eq!(ExitCode::FAILURE, exit_code);
+}
 
 #[test]
 fn files_joined_tag() {
