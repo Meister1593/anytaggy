@@ -6,7 +6,7 @@ use crate::db::tables::{
         reference_file_tag, unreference_file_tag,
     },
     files::{create_file, delete_file, get_all_files_path, get_file_id},
-    tags::{create_tag, get_tag_by_name, get_tag_id_by_name, get_tag_names},
+    tags::{create_tag, delete_tag, get_tag_by_name, get_tag_id_by_name, get_tag_names},
 };
 use anyhow::{Result, bail};
 use rusqlite::{Connection, OpenFlags};
@@ -18,11 +18,11 @@ const MIGRATIONS_SLICE: &[M] = &[M::up(include_str!("migrations/initial.sql"))];
 const MIGRATIONS: Migrations = Migrations::from_slice(MIGRATIONS_SLICE);
 
 #[derive(Debug, Clone)]
-pub struct File<'a> {
-    pub path: &'a str,
-    pub name: &'a str,
-    pub contents_hash: &'a str,
-    pub fingerprint_hash: &'a str,
+pub struct File {
+    pub path: String,
+    pub name: String,
+    pub contents_hash: String,
+    pub fingerprint_hash: String,
 }
 
 pub enum DatabaseMode {
@@ -83,7 +83,7 @@ impl Database {
         }
 
         // todo: this looks kinda ugly, might be better to use unwrap_or_else (but then no automatic ?)
-        let file_id = if let Some(file_id) = get_file_id(&tx, file.fingerprint_hash)? {
+        let file_id = if let Some(file_id) = get_file_id(&tx, &file.fingerprint_hash)? {
             debug!("found file_id {file_id}");
             file_id
         } else {
@@ -116,7 +116,7 @@ impl Database {
         get_tag_names(&self.connection)
     }
 
-    pub fn delete_tags_from_file(&mut self, file: &File, tag_names: &[String]) -> Result<()> {
+    pub fn untag_file(&mut self, file: &File, tag_names: &[String]) -> Result<()> {
         let tx = self.connection.transaction()?;
         let mut db_tag_ids = vec![];
 
@@ -128,7 +128,7 @@ impl Database {
 
             db_tag_ids.push(tag);
         }
-        let Some(file_id) = get_file_id(&tx, file.fingerprint_hash)? else {
+        let Some(file_id) = get_file_id(&tx, &file.fingerprint_hash)? else {
             bail!("Could not find such file in database");
         };
         debug!("found file_id {file_id}");
@@ -153,5 +153,18 @@ impl Database {
 
     pub fn get_files(&self) -> Result<Vec<String>> {
         get_all_files_path(&self.connection)
+    }
+
+    pub fn delete_tags(&mut self, names: &[String]) -> Result<()> {
+        let tx = self.connection.transaction()?;
+        for name in names {
+            let Some(tag) = get_tag_by_name(&tx, name)? else {
+                bail!("Could not find such tag in database: {name}");
+            };
+            delete_tag(&tx, tag.id)?;
+        }
+
+        tx.commit()?;
+        Ok(())
     }
 }

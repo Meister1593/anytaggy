@@ -32,9 +32,16 @@ enum Command {
 
         #[arg(short, long, value_parser = NonEmptyStringValueParser::new(), value_delimiter=',')]
         tags: Vec<String>,
+    },
+    Untag {
+        file_path: PathBuf,
 
-        #[arg(short, long)]
-        delete: bool,
+        #[arg(short, long, value_parser = NonEmptyStringValueParser::new(), value_delimiter=',')]
+        tags: Vec<String>,
+    },
+    RemoveTags {
+        #[arg(short, long, value_parser = NonEmptyStringValueParser::new(), value_delimiter=',')]
+        tags: Vec<String>,
     },
     Tags {
         file_path: Option<PathBuf>,
@@ -54,11 +61,7 @@ fn main() -> anyhow::Result<ExitCode> {
     let parse = Args::parse();
 
     match parse.command {
-        Command::Tag {
-            file_path,
-            tags,
-            delete,
-        } => {
+        Command::Tag { file_path, tags } => {
             if tags.is_empty() {
                 println!("ERROR: No tags specified");
 
@@ -67,7 +70,20 @@ fn main() -> anyhow::Result<ExitCode> {
 
             let mut db = Database::new(&DatabaseMode::ReadWrite, &parse.database_path);
 
-            commands::tag::tag_file(&mut db, &file_path, &tags, delete)?;
+            commands::tag::tag_file(&mut db, &file_path, &tags)?;
+
+            Ok(ExitCode::SUCCESS)
+        }
+        Command::Untag { file_path, tags } => {
+            if tags.is_empty() {
+                println!("ERROR: No tags specified");
+
+                return Ok(ExitCode::FAILURE);
+            }
+
+            let mut db = Database::new(&DatabaseMode::ReadWrite, &parse.database_path);
+
+            commands::untag::untag_file(&mut db, &file_path, &tags)?;
 
             Ok(ExitCode::SUCCESS)
         }
@@ -85,6 +101,19 @@ fn main() -> anyhow::Result<ExitCode> {
             } else {
                 println!("{}", commands::tags::get_all_tags(&db)?);
             }
+
+            Ok(ExitCode::SUCCESS)
+        }
+        Command::RemoveTags { tags } => {
+            if tags.is_empty() {
+                println!("ERROR: No tags specified");
+
+                return Ok(ExitCode::FAILURE);
+            }
+
+            let mut db = Database::new(&DatabaseMode::ReadWrite, &parse.database_path);
+
+            commands::tag::delete_tags(&mut db, &tags)?;
 
             Ok(ExitCode::SUCCESS)
         }

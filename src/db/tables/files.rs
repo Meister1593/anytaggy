@@ -34,10 +34,10 @@ pub fn create_file(tx: &Transaction, file: &File) -> Result<DbFile> {
 
     let db_file = insert.query_one(
         (
-            file.path,
-            file.name,
-            file.contents_hash,
-            file.fingerprint_hash,
+            &file.path,
+            &file.name,
+            &file.contents_hash,
+            &file.fingerprint_hash,
         ),
         |row| {
             Ok(DbFile {

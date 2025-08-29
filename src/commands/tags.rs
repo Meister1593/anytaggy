@@ -5,11 +5,13 @@ use tracing::debug;
 
 pub fn get_file_tags(db: &Database, file_path: &Path) -> Result<String> {
     debug!("file_path: {}", file_path.display());
+
     let contents_hash = super::get_file_contents_hash(file_path)?;
+    debug!("contents_hash: {contents_hash}");
+
     let fingerprint_hash =
         super::get_fingerprint_hash(&contents_hash, &file_path.display().to_string())?;
     debug!("fingerprint_hash: {fingerprint_hash}");
-
     Ok(db.get_file_tags(&fingerprint_hash)?.join(",").to_string())
 }
 

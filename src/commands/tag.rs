@@ -1,46 +1,18 @@
-use anyhow::Context;
 use anyhow::Result;
 use std::path::Path;
-use tracing::debug;
 
 use crate::db::Database;
-use crate::db::File;
 
-pub fn tag_file(
-    db: &mut Database,
-    file_path: &Path,
-    tag_names: &[String],
-    delete: bool,
-) -> Result<()> {
-    let name = file_path
-        .file_name()
-        .context("couldn't retrieve file name from path")?
-        .to_str()
-        .context("couldn't convert file name to str")?;
-    debug!("name: {name}");
+pub fn tag_file(db: &mut Database, file_path: &Path, tag_names: &[String]) -> Result<()> {
+    let file = super::prepare_file_arg(file_path)?;
 
-    let path = file_path
-        .to_str()
-        .context("couldn't convert file path to str")?;
-    debug!("path: {path}");
+    db.tag_file(&file, tag_names)?;
 
-    let contents_hash = super::get_file_contents_hash(file_path)?;
-    debug!("contents_hash: {contents_hash}");
+    Ok(())
+}
 
-    let fingerprint_hash = super::get_fingerprint_hash(&contents_hash, path)?;
-    debug!("fingerprint_hash: {fingerprint_hash}");
-
-    let file = File {
-        path,
-        name,
-        contents_hash: &contents_hash,
-        fingerprint_hash: &fingerprint_hash,
-    };
-    if delete {
-        db.delete_tags_from_file(&file, tag_names)?;
-    } else {
-        db.tag_file(&file, tag_names)?;
-    }
+pub fn delete_tags(db: &mut Database, tag_names: &[String]) -> Result<()> {
+    db.delete_tags(tag_names)?;
 
     Ok(())
 }

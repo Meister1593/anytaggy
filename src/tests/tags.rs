@@ -12,7 +12,7 @@ fn get_tags() {
         super::two_files_multiple_tags_prepare(&temp_dir);
 
     let mut db = Database::new(&DatabaseMode::ReadWrite, &db_path);
-    commands::tag::tag_file(&mut db, &tag_file_1, &test_tags_1, false).unwrap();
+    commands::tag::tag_file(&mut db, &tag_file_1, &test_tags_1).unwrap();
 
     let db = Database::new(&DatabaseMode::Read, &db_path);
     assert_eq!(

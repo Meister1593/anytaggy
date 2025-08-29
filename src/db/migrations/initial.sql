@@ -12,7 +12,7 @@ CREATE TABLE tags (
 );
 
 CREATE TABLE file_tags (
-    file_id INTEGER REFERENCES files (id),
-    tag_id INTEGER REFERENCES tags (id),
+    file_id INTEGER REFERENCES files (id) ON DELETE CASCADE,
+    tag_id INTEGER REFERENCES tags (id) ON DELETE CASCADE,
     UNIQUE (file_id, tag_id)
 );

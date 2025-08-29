@@ -199,11 +199,10 @@ fn delete_file_tag() {
     let assert = cmd
         .arg("--database-path")
         .arg(&db_path)
-        .arg("tag")
+        .arg("untag")
         .arg(&tag_file)
         .arg("--tags")
         .arg("test,test2,test3")
-        .arg("--delete")
         .assert();
     assert.success();
 
@@ -249,11 +248,10 @@ fn files_clean_after_unreference() {
     let assert = cmd
         .arg("--database-path")
         .arg(&db_path)
-        .arg("tag")
+        .arg("untag")
         .arg(&tag_file)
         .arg("--tags")
         .arg("test,test2,test3")
-        .arg("--delete")
         .assert();
     assert.success();
 

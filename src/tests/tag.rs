@@ -11,7 +11,7 @@ fn tag_file() {
     let (db_path, tag_file, _, test_tags, _) = super::two_files_multiple_tags_prepare(&temp_dir);
 
     let mut db = Database::new(&DatabaseMode::ReadWrite, &db_path);
-    commands::tag::tag_file(&mut db, &tag_file, &test_tags, false).unwrap();
+    commands::tag::tag_file(&mut db, &tag_file, &test_tags).unwrap();
 
     let db: Database = Database::new(&DatabaseMode::Read, &db_path);
     let tags = commands::tags::get_file_tags(&db, &tag_file).unwrap();

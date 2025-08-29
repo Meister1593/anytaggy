@@ -9,6 +9,17 @@ pub(in crate::db) struct DbTag {
     pub name: String,
 }
 
+pub fn delete_tag(tx: &Transaction, id: i32) -> Result<()> {
+    tx.execute(
+        "DELETE FROM tags
+             WHERE id = ?1",
+        (id,),
+    )?;
+    debug!("deleted tag with id: {id}");
+
+    Ok(())
+}
+
 pub fn create_tag(tx: &Transaction, name: &str) -> Result<DbTag> {
     let mut insert = tx.prepare(
         "INSERT INTO tags (name) 

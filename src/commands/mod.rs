@@ -1,14 +1,17 @@
 pub mod files;
+pub mod remove_tags;
 pub mod tag;
 pub mod tags;
+pub mod untag;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use sha2::Digest;
 use std::{
     fs::File,
     io::{self, Write},
     path::Path,
 };
+use tracing::debug;
 
 pub fn get_file_contents_hash(file_path: &Path) -> Result<String> {
     let mut hasher = sha2::Sha256::new();
@@ -26,4 +29,29 @@ pub fn get_fingerprint_hash(file_contents_hash: &str, file_path_string: &str) ->
     let result = hasher.finalize();
 
     Ok(format!("{result:x}"))
+}
+
+pub(super) fn prepare_file_arg(file_path: &Path) -> Result<crate::db::File> {
+    let name = file_path
+        .file_name()
+        .context("couldn't retrieve file name from path")?
+        .display()
+        .to_string();
+    debug!("name: {name}");
+
+    let path = file_path.display().to_string();
+    debug!("path: {path}");
+
+    let contents_hash = get_file_contents_hash(file_path)?;
+    debug!("contents_hash: {contents_hash}");
+
+    let fingerprint_hash = get_fingerprint_hash(&contents_hash, &path)?;
+    debug!("fingerprint_hash: {fingerprint_hash}");
+
+    Ok(crate::db::File {
+        path,
+        name,
+        contents_hash,
+        fingerprint_hash,
+    })
 }
