@@ -10,8 +10,14 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  check-format:
+    runs-on: ubuntu-latest
 
+    steps:
+    - uses: actions/checkout@v4
+    - name: Check format
+      run: cargo fmt --check
+  tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +26,14 @@ jobs:
       run: |
         cargo install cargo-nextest --locked
         cargo +stable install cargo-llvm-cov --locked
-    - name: Build
-      run: cargo build --verbose
     - name: Run tests
       run: cargo llvm-cov nextest
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build
+      run: cargo build --verbose
