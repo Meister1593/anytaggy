@@ -7,11 +7,10 @@ use temp_dir::TempDir;
 fn tag_file() {
     // Test data
     let temp_dir = TempDir::new().unwrap();
-    let (database_path, tag_file, _, test_tags, _) =
-        super::two_files_multiple_tags_prepare(&temp_dir);
+    let (db_path, tag_file, _, test_tags, _) = super::two_files_multiple_tags_prepare(&temp_dir);
 
     let args = Args {
-        database_path: database_path.clone(),
+        database_path: db_path.clone(),
         command: crate::Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
@@ -22,7 +21,7 @@ fn tag_file() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path,
+        database_path: db_path,
         command: crate::Command::Tags {
             file_path: Some(tag_file),
         },
