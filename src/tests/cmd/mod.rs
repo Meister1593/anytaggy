@@ -1,4 +1,5 @@
 mod files;
+mod rm_tags;
 mod tag;
 mod tags;
 mod untag;

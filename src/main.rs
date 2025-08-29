@@ -40,7 +40,7 @@ enum Command {
         tags: Vec<String>,
     },
     RmTags {
-        #[arg(short, long, value_parser = NonEmptyStringValueParser::new(), value_delimiter=',')]
+        #[arg(value_parser = NonEmptyStringValueParser::new(), value_delimiter=',')]
         tags: Vec<String>,
     },
     Tags {
