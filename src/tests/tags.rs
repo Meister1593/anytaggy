@@ -1,22 +1,32 @@
-use crate::{
-    commands,
-    db::{Database, DatabaseMode},
-};
+use std::process::ExitCode;
+
+use crate::{Args, entrypoint};
 use temp_dir::TempDir;
 
 #[test]
 fn get_tags() {
     // Test data
     let temp_dir = TempDir::new().unwrap();
-    let (db_path, tag_file_1, _, test_tags_1, _) =
-        super::two_files_multiple_tags_prepare(&temp_dir);
+    let (db_path, tag_file, _, test_tags, _) = super::two_files_multiple_tags_prepare(&temp_dir);
 
-    let mut db = Database::new(&DatabaseMode::ReadWrite, &db_path);
-    commands::tag::tag_file(&mut db, &tag_file_1, &test_tags_1).unwrap();
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Tag {
+            file_path: tag_file.clone(),
+            tags: test_tags.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
 
-    let db = Database::new(&DatabaseMode::Read, &db_path);
-    assert_eq!(
-        test_tags_1.join(","),
-        commands::tags::get_all_tags(&db).unwrap()
-    );
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Tags {
+            file_path: Some(tag_file.clone()),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(Some(test_tags.join(",")), out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
