@@ -6,13 +6,16 @@ Project heavily inspired by [TMSU](https://github.com/oniony/TMSU), but written 
 
 Initial idea was to have a portable database of file tags for media, but this cat work on any kind of files (as codebase for media or for random files will be literally the same) and i see no reason to restrict app to just media.
 
-Roadmap:
+## Roadmap
 * CRUD (?)
  * Tags (?)
  * Files (x)
 * Repair (x)
 
-Tests:
+## Tests
+Project aims to have as much of test coverage as possible
+
+For testing coverage:
 1. Install nextest: `cargo install cargo-nextest --locked`
 2. Install llvm-cov: `cargo +stable install cargo-llvm-cov --locked`
 3. Run nextest:
