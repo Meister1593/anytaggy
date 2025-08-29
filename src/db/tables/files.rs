@@ -54,3 +54,15 @@ pub fn get_file_id(conn: &Connection, fingerprint_hash: &str) -> Result<Option<i
         .query_one([&fingerprint_hash], |row| row.get(0))
         .optional()?)
 }
+
+pub fn get_all_files_path(conn: &Connection) -> Result<Vec<String>> {
+    let mut query = conn.prepare(
+        "SELECT path 
+            FROM files",
+    )?;
+    let mut paths: Vec<String> = Vec::new();
+    for path in query.query_map([], |row| row.get(0))? {
+        paths.push(path?);
+    }
+    Ok(paths)
+}

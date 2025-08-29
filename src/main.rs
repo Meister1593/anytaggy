@@ -42,7 +42,7 @@ enum Command {
 
     Files {
         #[arg(value_parser = NonEmptyStringValueParser::new(), value_delimiter=' ')]
-        tags: Vec<String>,
+        tags: Option<Vec<String>>,
     },
 }
 
@@ -98,7 +98,11 @@ fn main() -> anyhow::Result<ExitCode> {
 
             let db = Database::new(&DatabaseMode::Read, &parse.database_path);
 
-            println!("{}", commands::files::get_file_paths(&db, &tags)?);
+            if let Some(tags) = tags {
+                println!("{}", commands::files::get_file_paths(&db, &tags)?);
+            } else {
+                println!("{}", commands::files::get_files(&db)?);
+            }
 
             Ok(ExitCode::SUCCESS)
         }

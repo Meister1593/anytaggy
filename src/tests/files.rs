@@ -97,7 +97,7 @@ fn delete_file_tag() {
 }
 
 #[test]
-fn files_clean_after_unreference() {
+fn files_clean_after_delete_file_tag() {
     // Test data
     let temp_dir = TempDir::new().unwrap();
     let (db_path, tag_file, _, test_tags, _) = super::two_files_multiple_tags_prepare(&temp_dir);
@@ -111,6 +111,6 @@ fn files_clean_after_unreference() {
     let mut db = Database::new(&DatabaseMode::ReadWrite, &db_path);
     commands::tag::tag_file(&mut db, &tag_file, &test_tags, true).unwrap();
     let db = Database::new(&DatabaseMode::Read, &db_path);
-    let tags = commands::tags::get_file_tags(&db, &tag_file).unwrap();
-    assert_eq!("", tags);
+    let files = commands::tags::get_all_tags(&db).unwrap();
+    assert_eq!("", files);
 }

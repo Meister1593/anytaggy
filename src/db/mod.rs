@@ -5,7 +5,7 @@ use crate::db::tables::{
         get_file_paths_by_tags_and_op, get_file_tag_ids_by_id, get_file_tags_by_hash,
         reference_file_tag, unreference_file_tag,
     },
-    files::{create_file, get_file_id},
+    files::{create_file, get_all_files_path, get_file_id},
     tags::{create_tag, get_tag_by_name, get_tag_id_by_name, get_tag_names},
 };
 use anyhow::{Result, bail};
@@ -145,5 +145,9 @@ impl Database {
         tx.commit()?;
 
         Ok(())
+    }
+
+    pub(crate) fn get_files(&self) -> Result<Vec<String>> {
+        get_all_files_path(&self.connection)
     }
 }

@@ -216,6 +216,7 @@ fn delete_file_tag() {
         .assert();
     assert.success().stdout("\n".to_string());
 }
+
 #[test]
 fn files_clean_after_unreference() {
     let mut cmd = cargo_bin_cmd();
