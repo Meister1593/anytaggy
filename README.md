@@ -22,4 +22,4 @@ For testing coverage:
 2. Install llvm-cov: `cargo +stable install cargo-llvm-cov --locked`
 3. Run nextest:
     * For code `Coverage Gutters`: `cargo llvm-cov nextest --lcov --output-path ./target/lcov.info`
-    * CLI: `Coverage Gutters`: `cargo llvm-cov`
+    * CLI: `Coverage Gutters`: `cargo llvm-cov nextest`
