@@ -77,3 +77,17 @@ pub fn get_all_files_path(conn: &Connection) -> Result<Vec<String>> {
     }
     Ok(paths)
 }
+
+pub fn get_all_file_ids_without_tags(conn: &Connection) -> Result<Vec<i32>> {
+    let mut query = conn.prepare(
+        "SELECT f.id 
+            FROM files f
+                LEFT JOIN file_tags ft ON f.id = ft.file_id
+            WHERE ft.file_id IS NULL",
+    )?;
+    let mut file_ids: Vec<i32> = Vec::new();
+    for path in query.query_map([], |row| row.get(0))? {
+        file_ids.push(path?);
+    }
+    Ok(file_ids)
+}

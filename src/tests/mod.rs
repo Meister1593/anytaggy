@@ -1,7 +1,9 @@
 mod cmd;
 mod files;
+mod rm_tags;
 mod tag;
 mod tags;
+mod untag;
 
 use rand::prelude::*;
 use std::{

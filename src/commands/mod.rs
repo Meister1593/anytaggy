@@ -1,5 +1,5 @@
 pub mod files;
-pub mod remove_tags;
+pub mod rm_tags;
 pub mod tag;
 pub mod tags;
 pub mod untag;

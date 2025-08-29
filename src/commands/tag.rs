@@ -11,8 +11,3 @@ pub fn tag_file(db: &mut Database, file_path: &Path, tag_names: &[String]) -> Re
     Ok(())
 }
 
-pub fn delete_tags(db: &mut Database, tag_names: &[String]) -> Result<()> {
-    db.delete_tags(tag_names)?;
-
-    Ok(())
-}

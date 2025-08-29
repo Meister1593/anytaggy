@@ -5,7 +5,9 @@ use crate::db::tables::{
         get_file_paths_by_tags_and_op, get_file_tag_ids_by_id, get_file_tags_by_hash,
         reference_file_tag, unreference_file_tag,
     },
-    files::{create_file, delete_file, get_all_files_path, get_file_id},
+    files::{
+        create_file, delete_file, get_all_file_ids_without_tags, get_all_files_path, get_file_id,
+    },
     tags::{create_tag, delete_tag, get_tag_by_name, get_tag_id_by_name, get_tag_names},
 };
 use anyhow::{Result, bail};
@@ -162,6 +164,10 @@ impl Database {
                 bail!("Could not find such tag in database: {name}");
             };
             delete_tag(&tx, tag.id)?;
+        }
+
+        for id in get_all_file_ids_without_tags(&tx)? {
+            delete_file(&tx, id)?;
         }
 
         tx.commit()?;

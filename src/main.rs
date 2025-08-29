@@ -39,7 +39,7 @@ enum Command {
         #[arg(short, long, value_parser = NonEmptyStringValueParser::new(), value_delimiter=',')]
         tags: Vec<String>,
     },
-    RemoveTags {
+    RmTags {
         #[arg(short, long, value_parser = NonEmptyStringValueParser::new(), value_delimiter=',')]
         tags: Vec<String>,
     },
@@ -104,7 +104,7 @@ fn main() -> anyhow::Result<ExitCode> {
 
             Ok(ExitCode::SUCCESS)
         }
-        Command::RemoveTags { tags } => {
+        Command::RmTags { tags } => {
             if tags.is_empty() {
                 println!("ERROR: No tags specified");
 
@@ -113,7 +113,7 @@ fn main() -> anyhow::Result<ExitCode> {
 
             let mut db = Database::new(&DatabaseMode::ReadWrite, &parse.database_path);
 
-            commands::tag::delete_tags(&mut db, &tags)?;
+            commands::rm_tags::rm_tags(&mut db, &tags)?;
 
             Ok(ExitCode::SUCCESS)
         }

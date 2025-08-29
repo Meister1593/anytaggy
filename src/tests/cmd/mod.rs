@@ -1,11 +1,12 @@
 mod files;
 mod tag;
 mod tags;
+mod untag;
 
 use assert_cmd::Command;
 
 fn cargo_bin_cmd() -> Command {
-    Command::cargo_bin("anytaggy").unwrap()
+    Command::cargo_bin("../../debug/anytaggy").unwrap()
 }
 
 #[test]
