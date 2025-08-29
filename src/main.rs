@@ -15,9 +15,6 @@ use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberI
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    #[arg(short, long)]
-    verbose: bool,
-
     #[arg(short, long, default_value = Path::new(".anytaggy.db").to_path_buf().into_os_string())]
     database_path: PathBuf,
 
