@@ -37,7 +37,7 @@ pub fn tag_file(
         fingerprint_hash: &fingerprint_hash,
     };
     if delete {
-        db.delete_tags_from_file(&file, tag_names);
+        db.delete_tags_from_file(&file, tag_names)?;
     } else {
         db.tag_file(&file, tag_names)?;
     }

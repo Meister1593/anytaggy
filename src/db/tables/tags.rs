@@ -9,14 +9,14 @@ pub(in crate::db) struct DbTag {
     pub name: String,
 }
 
-pub fn create_tag(tx: &Transaction, tag_name: &str) -> Result<DbTag> {
+pub fn create_tag(tx: &Transaction, name: &str) -> Result<DbTag> {
     let mut insert = tx.prepare(
         "INSERT INTO tags (name) 
              VALUES (?1) 
              RETURNING id, name",
     )?;
 
-    let db_tag = insert.query_one([tag_name], |row| {
+    let db_tag = insert.query_one([name], |row| {
         Ok(DbTag {
             id: row.get(0)?,
             name: row.get(1)?,
@@ -27,7 +27,7 @@ pub fn create_tag(tx: &Transaction, tag_name: &str) -> Result<DbTag> {
     Ok(db_tag)
 }
 
-pub fn get_tags(conn: &Connection) -> Result<Vec<String>> {
+pub fn get_tag_names(conn: &Connection) -> Result<Vec<String>> {
     let mut query = conn.prepare("SELECT name FROM tags")?;
     let mut tag_names: Vec<String> = Vec::new();
     for tag_name in query.query_map([], |row| row.get(0))? {
@@ -37,11 +37,27 @@ pub fn get_tags(conn: &Connection) -> Result<Vec<String>> {
     Ok(tag_names)
 }
 
-pub fn get_tag_id_by_name(conn: &Connection, tag_name: &str) -> Result<Option<i32>> {
+pub fn get_tag_id_by_name(conn: &Connection, name: &str) -> Result<Option<i32>> {
     let mut query = conn.prepare(
         "SELECT id FROM tags 
              WHERE name = ?1",
     )?;
 
-    Ok(query.query_one([tag_name], |row| row.get(0)).optional()?)
+    Ok(query.query_one([name], |row| row.get(0)).optional()?)
+}
+
+pub fn get_tag_by_name(conn: &Connection, name: &str) -> Result<Option<DbTag>> {
+    let mut query = conn.prepare(
+        "SELECT * FROM tags 
+             WHERE name = ?1",
+    )?;
+
+    Ok(query
+        .query_one([name], |row| {
+            Ok(DbTag {
+                id: row.get(0)?,
+                name: row.get(1)?,
+            })
+        })
+        .optional()?)
 }

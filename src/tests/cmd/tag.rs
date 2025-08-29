@@ -3,7 +3,7 @@ use temp_dir::TempDir;
 use crate::tests::{cmd::cargo_bin_cmd, two_files_multiple_tags_prepare};
 
 #[test]
-fn tag_file_cmd() {
+fn tag_file() {
     let mut cmd = cargo_bin_cmd();
 
     let temp_dir = TempDir::new().unwrap();

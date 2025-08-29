@@ -3,15 +3,15 @@ mod tables;
 use crate::db::tables::{
     file_tags::{
         get_file_paths_by_tags_and_op, get_file_tag_ids_by_id, get_file_tags_by_hash,
-        reference_file_tag,
+        reference_file_tag, unreference_file_tag,
     },
     files::{create_file, get_file_id},
-    tags::{create_tag, get_tag_id_by_name, get_tags},
+    tags::{create_tag, get_tag_by_name, get_tag_id_by_name, get_tag_names},
 };
-use anyhow::Result;
+use anyhow::{Result, bail};
 use rusqlite::{Connection, OpenFlags};
 use rusqlite_migration::{M, Migrations};
-use std::path::Path;
+use std::{path::Path, vec};
 use tracing::{debug, info};
 
 const MIGRATIONS_SLICE: &[M] = &[M::up(include_str!("migrations/initial.sql"))];
@@ -67,7 +67,7 @@ impl Database {
 
     pub fn tag_file(&mut self, file: &File, tag_names: &[String]) -> Result<()> {
         let tx = self.connection.transaction()?;
-        let mut db_tags = vec![];
+        let mut db_tag_ids = vec![];
 
         for tag_name in tag_names {
             let tag_name = tag_name.trim();
@@ -79,7 +79,7 @@ impl Database {
                 db_tag.id
             };
             debug!("tag_id: {tag_id}");
-            db_tags.push(tag_id);
+            db_tag_ids.push(tag_id);
         }
 
         // todo: this looks kinda ugly, might be better to use unwrap_or_else (but then no automatic ?)
@@ -93,7 +93,7 @@ impl Database {
         debug!("file_id: {file_id}");
 
         let file_tag_ids = get_file_tag_ids_by_id(&tx, file_id)?;
-        for tag_id in db_tags {
+        for tag_id in db_tag_ids {
             if !file_tag_ids.contains(&tag_id) {
                 reference_file_tag(&tx, file_id, tag_id)?;
             }
@@ -113,10 +113,37 @@ impl Database {
     }
 
     pub fn get_all_tags(&self) -> Result<Vec<String>> {
-        get_tags(&self.connection)
+        get_tag_names(&self.connection)
     }
 
-    pub fn delete_tags_from_file(&mut self, file: &File, tag_names: &[String]) {
-        todo!()
+    pub fn delete_tags_from_file(&mut self, file: &File, tag_names: &[String]) -> Result<()> {
+        let tx = self.connection.transaction()?;
+        let mut db_tag_ids = vec![];
+
+        for tag_name in tag_names {
+            let Some(tag) = get_tag_by_name(&tx, tag_name)? else {
+                bail!("Could not find such tag in database: {tag_name}");
+            };
+            debug!("found tag_id {}", tag.id);
+
+            db_tag_ids.push(tag);
+        }
+        let Some(file_id) = get_file_id(&tx, file.fingerprint_hash)? else {
+            bail!("Could not find such file in database");
+        };
+        debug!("found file_id {file_id}");
+
+        let file_tag_ids = get_file_tag_ids_by_id(&tx, file_id)?;
+        for tag in db_tag_ids {
+            if file_tag_ids.contains(&tag.id) {
+                unreference_file_tag(&tx, file_id, tag.id)?;
+            } else {
+                bail!("File did not have such tag: {}", tag.name);
+            }
+        }
+
+        tx.commit()?;
+
+        Ok(())
     }
 }

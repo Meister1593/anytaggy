@@ -3,6 +3,17 @@ use rusqlite::{Connection, Transaction};
 use std::vec;
 use tracing::debug;
 
+pub fn unreference_file_tag(tx: &Transaction, file_id: i32, tag_id: i32) -> Result<()> {
+    tx.execute(
+        "DELETE FROM file_tags
+             WHERE file_id = ?1 AND tag_id = ?2",
+        (file_id, tag_id),
+    )?;
+    debug!("unreferenced {file_id} with {tag_id}");
+
+    Ok(())
+}
+
 pub fn reference_file_tag(tx: &Transaction, file_id: i32, tag_id: i32) -> Result<()> {
     tx.execute(
         "INSERT INTO file_tags (file_id, tag_id) 
