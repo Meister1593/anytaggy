@@ -1,9 +1,6 @@
 use std::process::ExitCode;
 
-use crate::{
-    Args,
-    entrypoint,
-};
+use crate::{Args, entrypoint};
 use temp_dir::TempDir;
 
 #[test]

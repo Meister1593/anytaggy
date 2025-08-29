@@ -164,6 +164,6 @@ fn main() -> anyhow::Result<ExitCode> {
     if let Some(out) = out {
         println!("{out}");
     }
-    
+
     Ok(exit_code)
 }

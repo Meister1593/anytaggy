@@ -10,4 +10,3 @@ pub fn tag_file(db: &mut Database, file_path: &Path, tag_names: &[String]) -> Re
 
     Ok(())
 }
-
