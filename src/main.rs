@@ -15,6 +15,7 @@ use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberI
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
+    /// Absolute path to database to store tags, files metadata
     #[arg(short, long, default_value = Path::new(".anytaggy.db").to_path_buf().into_os_string())]
     database_path: PathBuf,
 
@@ -24,26 +25,43 @@ struct Args {
 
 #[derive(Subcommand, Debug)]
 enum Command {
+    /// Tagging files with tag names.
+    /// Creates database, tags inside database if required
     Tag {
+        /// Path to the file
         file_path: PathBuf,
 
+        /// Tags to add to the file
         #[arg(short, long, value_parser = NonEmptyStringValueParser::new(), value_delimiter=',')]
         tags: Vec<String>,
     },
+    /// Untag files from database.
+    /// Does not delete tags, only un-references files from them
     Untag {
+        /// Path to the file with tags
         file_path: PathBuf,
 
+        /// Tags to remove from file
         #[arg(short, long, value_parser = NonEmptyStringValueParser::new(), value_delimiter=',')]
         tags: Vec<String>,
     },
+    /// Delete tags.
+    /// Will also remove tags from existing files in database
     RmTags {
+        /// Tags to remove
         #[arg(value_parser = NonEmptyStringValueParser::new(), value_delimiter=',')]
         tags: Vec<String>,
     },
+    /// List tags
     Tags {
+        /// Path to the file with tags.
+        /// If not specified, lists all tags from database
         file_path: Option<PathBuf>,
     },
+    /// List files
     Files {
+        /// Tags to list files with.
+        /// If not specified, lists all files from database
         #[arg(value_parser = NonEmptyStringValueParser::new(), value_delimiter=' ')]
         tags: Option<Vec<String>>,
     },
