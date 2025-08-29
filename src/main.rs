@@ -14,7 +14,7 @@ use tracing_subscriber::{EnvFilter, fmt, layer::SubscriberExt, util::SubscriberI
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
-struct Args {
+pub struct Args {
     /// Absolute path to database to store tags, files metadata
     #[arg(short, long, default_value = Path::new(".anytaggy.db").to_path_buf().into_os_string())]
     database_path: PathBuf,
@@ -24,7 +24,7 @@ struct Args {
 }
 
 #[derive(Subcommand, Debug)]
-enum Command {
+pub enum Command {
     /// Tagging files with tag names.
     /// Creates database, tags inside database if required
     Tag {
@@ -67,87 +67,103 @@ enum Command {
     },
 }
 
+pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
+    match args.command {
+        Command::Tag { file_path, tags } => {
+            if tags.is_empty() {
+                return Ok((Some("ERROR: No tags specified".into()), ExitCode::FAILURE));
+            }
+
+            let mut db = Database::new(&DatabaseMode::ReadWrite, &args.database_path);
+
+            commands::tag::tag_file(&mut db, &file_path, &tags)?;
+
+            Ok((None, ExitCode::SUCCESS))
+        }
+        Command::Untag { file_path, tags } => {
+            if !args.database_path.exists() {
+                return Ok((
+                    Some("ERROR: Database file could not be found".into()),
+                    ExitCode::FAILURE,
+                ));
+            }
+
+            if tags.is_empty() {
+                return Ok((Some("ERROR: No tags specified".into()), ExitCode::FAILURE));
+            }
+
+            let mut db = Database::new(&DatabaseMode::ReadWrite, &args.database_path);
+
+            commands::untag::untag_file(&mut db, &file_path, &tags)?;
+
+            Ok((None, ExitCode::SUCCESS))
+        }
+        Command::Tags { file_path } => {
+            if !args.database_path.exists() {
+                return Ok((
+                    Some("ERROR: Database file could not be found".into()),
+                    ExitCode::FAILURE,
+                ));
+            }
+
+            let db = Database::new(&DatabaseMode::Read, &args.database_path);
+
+            let out = if let Some(file_path) = file_path {
+                commands::tags::get_file_tags(&db, &file_path)?
+            } else {
+                commands::tags::get_all_tags(&db)?
+            };
+
+            Ok((Some(out), ExitCode::SUCCESS))
+        }
+        Command::RmTags { tags } => {
+            if !args.database_path.exists() {
+                return Ok((
+                    Some("ERROR: Database file could not be found".into()),
+                    ExitCode::FAILURE,
+                ));
+            }
+
+            if tags.is_empty() {
+                return Ok((Some("ERROR: No tags specified".into()), ExitCode::FAILURE));
+            }
+
+            let mut db = Database::new(&DatabaseMode::ReadWrite, &args.database_path);
+
+            commands::rm_tags::rm_tags(&mut db, &tags)?;
+
+            Ok((None, ExitCode::SUCCESS))
+        }
+        Command::Files { tags } => {
+            if !args.database_path.exists() {
+                return Ok((
+                    Some("ERROR: Database file could not be found".into()),
+                    ExitCode::FAILURE,
+                ));
+            }
+
+            let db = Database::new(&DatabaseMode::Read, &args.database_path);
+
+            let out = if let Some(tags) = tags {
+                commands::files::get_file_paths(&db, &tags)?
+            } else {
+                commands::files::get_files(&db)?
+            };
+
+            Ok((Some(out), ExitCode::SUCCESS))
+        }
+    }
+}
+
 fn main() -> anyhow::Result<ExitCode> {
     tracing_subscriber::registry()
         .with(fmt::layer())
         .with(EnvFilter::from_default_env())
         .init();
-
-    let parse = Args::parse();
-
-    match parse.command {
-        Command::Tag { file_path, tags } => {
-            if tags.is_empty() {
-                println!("ERROR: No tags specified");
-
-                return Ok(ExitCode::FAILURE);
-            }
-
-            let mut db = Database::new(&DatabaseMode::ReadWrite, &parse.database_path);
-
-            commands::tag::tag_file(&mut db, &file_path, &tags)?;
-
-            Ok(ExitCode::SUCCESS)
-        }
-        Command::Untag { file_path, tags } => {
-            if tags.is_empty() {
-                println!("ERROR: No tags specified");
-
-                return Ok(ExitCode::FAILURE);
-            }
-
-            let mut db = Database::new(&DatabaseMode::ReadWrite, &parse.database_path);
-
-            commands::untag::untag_file(&mut db, &file_path, &tags)?;
-
-            Ok(ExitCode::SUCCESS)
-        }
-        Command::Tags { file_path } => {
-            if !parse.database_path.exists() {
-                println!("ERROR: Database file could not be found");
-
-                return Ok(ExitCode::FAILURE);
-            }
-
-            let db = Database::new(&DatabaseMode::Read, &parse.database_path);
-
-            if let Some(file_path) = file_path {
-                println!("{}", commands::tags::get_file_tags(&db, &file_path)?);
-            } else {
-                println!("{}", commands::tags::get_all_tags(&db)?);
-            }
-
-            Ok(ExitCode::SUCCESS)
-        }
-        Command::RmTags { tags } => {
-            if tags.is_empty() {
-                println!("ERROR: No tags specified");
-
-                return Ok(ExitCode::FAILURE);
-            }
-
-            let mut db = Database::new(&DatabaseMode::ReadWrite, &parse.database_path);
-
-            commands::rm_tags::rm_tags(&mut db, &tags)?;
-
-            Ok(ExitCode::SUCCESS)
-        }
-        Command::Files { tags } => {
-            if !parse.database_path.exists() {
-                println!("ERROR: Database file could not be found");
-
-                return Ok(ExitCode::FAILURE);
-            }
-
-            let db = Database::new(&DatabaseMode::Read, &parse.database_path);
-
-            if let Some(tags) = tags {
-                println!("{}", commands::files::get_file_paths(&db, &tags)?);
-            } else {
-                println!("{}", commands::files::get_files(&db)?);
-            }
-
-            Ok(ExitCode::SUCCESS)
-        }
+    let (out, exit_code) = entrypoint(Args::parse())?;
+    if let Some(out) = out {
+        println!("{out}");
     }
+    
+    Ok(exit_code)
 }

@@ -1,4 +1,3 @@
-mod cmd;
 mod files;
 mod rm_tags;
 mod tag;
