@@ -2,11 +2,7 @@ use std::process::ExitCode;
 
 use temp_dir::TempDir;
 
-use crate::{
-    Args, commands,
-    db::{Database, DatabaseMode},
-    entrypoint,
-};
+use crate::{Args, entrypoint};
 
 #[test]
 fn rm_tags() {

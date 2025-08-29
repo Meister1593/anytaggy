@@ -67,6 +67,7 @@ pub enum Command {
     },
 }
 
+#[allow(clippy::missing_errors_doc)]
 pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
     match args.command {
         Command::Tag { file_path, tags } => {
