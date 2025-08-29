@@ -14,6 +14,17 @@ pub(in crate::db) struct DbFile {
     pub fingerprint_hash: String,
 }
 
+pub fn delete_file(tx: &Transaction, id: i32) -> Result<()> {
+    tx.execute(
+        "DELETE FROM files
+             WHERE id = ?1",
+        (id,),
+    )?;
+    debug!("deleted file with id: {id}");
+
+    Ok(())
+}
+
 pub fn create_file(tx: &Transaction, file: &File) -> Result<DbFile> {
     let mut insert = tx.prepare(
         "INSERT INTO files (path, name, contents_hash, fingerprint_hash) 

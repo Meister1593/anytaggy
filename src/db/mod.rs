@@ -5,7 +5,7 @@ use crate::db::tables::{
         get_file_paths_by_tags_and_op, get_file_tag_ids_by_id, get_file_tags_by_hash,
         reference_file_tag, unreference_file_tag,
     },
-    files::{create_file, get_all_files_path, get_file_id},
+    files::{create_file, delete_file, get_all_files_path, get_file_id},
     tags::{create_tag, get_tag_by_name, get_tag_id_by_name, get_tag_names},
 };
 use anyhow::{Result, bail};
@@ -134,12 +134,16 @@ impl Database {
         debug!("found file_id {file_id}");
 
         let file_tag_ids = get_file_tag_ids_by_id(&tx, file_id)?;
-        for tag in db_tag_ids {
+        for tag in &db_tag_ids {
             if file_tag_ids.contains(&tag.id) {
                 unreference_file_tag(&tx, file_id, tag.id)?;
             } else {
                 bail!("File did not have such tag: {}", tag.name);
             }
+        }
+
+        if file_tag_ids.len() == db_tag_ids.len() {
+            delete_file(&tx, file_id)?;
         }
 
         tx.commit()?;

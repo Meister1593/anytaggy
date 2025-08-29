@@ -111,6 +111,6 @@ fn files_clean_after_delete_file_tag() {
     let mut db = Database::new(&DatabaseMode::ReadWrite, &db_path);
     commands::tag::tag_file(&mut db, &tag_file, &test_tags, true).unwrap();
     let db = Database::new(&DatabaseMode::Read, &db_path);
-    let files = commands::tags::get_all_tags(&db).unwrap();
+    let files = commands::files::get_files(&db).unwrap();
     assert_eq!("", files);
 }

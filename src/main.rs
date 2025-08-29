@@ -39,7 +39,6 @@ enum Command {
     Tags {
         file_path: Option<PathBuf>,
     },
-
     Files {
         #[arg(value_parser = NonEmptyStringValueParser::new(), value_delimiter=' ')]
         tags: Option<Vec<String>>,
@@ -60,7 +59,7 @@ fn main() -> anyhow::Result<ExitCode> {
             tags,
             delete,
         } => {
-            if tags.is_empty(){
+            if tags.is_empty() {
                 println!("ERROR: No tags specified");
 
                 return Ok(ExitCode::FAILURE);
