@@ -1,7 +1,6 @@
-use crate::{
-    commands,
-    db::{Database, DatabaseMode},
-};
+use std::process::ExitCode;
+
+use crate::{Args, entrypoint};
 use temp_dir::TempDir;
 
 #[test]
@@ -11,15 +10,43 @@ fn files_joined_tag() {
     let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
         super::two_files_multiple_tags_prepare(&temp_dir);
 
-    let mut db = Database::new(&DatabaseMode::ReadWrite, &db_path);
-    commands::tag::tag_file(&mut db, &tag_file_1, &test_tags_1).unwrap();
-    commands::tag::tag_file(&mut db, &tag_file_2, &test_tags_2).unwrap();
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Tag {
+            file_path: tag_file_1.clone(),
+            tags: test_tags_1.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Tag {
+            file_path: tag_file_2.clone(),
+            tags: test_tags_2.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
 
-    let db = Database::new(&DatabaseMode::Read, &db_path);
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Files {
+            tags: Some(vec!["test3".into()]),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
     assert_eq!(
-        format!("{}\n{}", tag_file_1.display(), tag_file_2.display()),
-        commands::files::get_file_paths(&db, &["test3".into()]).unwrap()
+        Some(format!(
+            "{}\n{}",
+            tag_file_1.display(),
+            tag_file_2.display()
+        )),
+        out
     );
+    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
 #[test]
@@ -29,15 +56,36 @@ fn files_left_tag() {
     let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
         super::two_files_multiple_tags_prepare(&temp_dir);
 
-    let mut db = Database::new(&DatabaseMode::ReadWrite, &db_path);
-    commands::tag::tag_file(&mut db, &tag_file_1, &test_tags_1).unwrap();
-    commands::tag::tag_file(&mut db, &tag_file_2, &test_tags_2).unwrap();
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Tag {
+            file_path: tag_file_1.clone(),
+            tags: test_tags_1.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Tag {
+            file_path: tag_file_2.clone(),
+            tags: test_tags_2.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
 
-    let db = Database::new(&DatabaseMode::Read, &db_path);
-    assert_eq!(
-        tag_file_1.display().to_string(),
-        commands::files::get_file_paths(&db, &["test".into(), "test2".into()]).unwrap()
-    );
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Files {
+            tags: Some(vec!["test".into(), "test2".into()]),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(Some(tag_file_1.display().to_string()), out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
 #[test]
@@ -47,15 +95,36 @@ fn files_right_tag() {
     let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
         super::two_files_multiple_tags_prepare(&temp_dir);
 
-    let mut db = Database::new(&DatabaseMode::ReadWrite, &db_path);
-    commands::tag::tag_file(&mut db, &tag_file_1, &test_tags_1).unwrap();
-    commands::tag::tag_file(&mut db, &tag_file_2, &test_tags_2).unwrap();
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Tag {
+            file_path: tag_file_1.clone(),
+            tags: test_tags_1.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Tag {
+            file_path: tag_file_2.clone(),
+            tags: test_tags_2.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
 
-    let db = Database::new(&DatabaseMode::Read, &db_path);
-    assert_eq!(
-        tag_file_2.display().to_string(),
-        commands::files::get_file_paths(&db, &["test4".into()]).unwrap()
-    );
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Files {
+            tags: Some(vec!["test4".into()]),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(Some(tag_file_2.display().to_string()), out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
 #[test]
@@ -65,14 +134,78 @@ fn files_neither_tag() {
     let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
         super::two_files_multiple_tags_prepare(&temp_dir);
 
-    let mut db = Database::new(&DatabaseMode::ReadWrite, &db_path);
-    commands::tag::tag_file(&mut db, &tag_file_1, &test_tags_1).unwrap();
-    commands::tag::tag_file(&mut db, &tag_file_2, &test_tags_2).unwrap();
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Tag {
+            file_path: tag_file_1.clone(),
+            tags: test_tags_1.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Tag {
+            file_path: tag_file_2.clone(),
+            tags: test_tags_2.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
 
-    let db = Database::new(&DatabaseMode::Read, &db_path);
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Files {
+            tags: Some([&test_tags_1[..], &test_tags_2[..]].concat().clone()),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(Some(String::new()), out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
+}
+
+#[test]
+fn get_all_files() {
+    // Test data
+    let temp_dir = TempDir::new().unwrap();
+    let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
+        super::two_files_multiple_tags_prepare(&temp_dir);
+
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Tag {
+            file_path: tag_file_1.clone(),
+            tags: test_tags_1.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Tag {
+            file_path: tag_file_2.clone(),
+            tags: test_tags_2.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
+
+    let args = Args {
+        database_path: db_path.clone(),
+        command: crate::Command::Files { tags: None },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
     assert_eq!(
-        "",
-        commands::files::get_file_paths(&db, &[&test_tags_1[..], &test_tags_2[..]].concat())
-            .unwrap()
+        Some(format!(
+            "{}\n{}",
+            tag_file_1.display(),
+            tag_file_2.display()
+        )),
+        out
     );
+    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
