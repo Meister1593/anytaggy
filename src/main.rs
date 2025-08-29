@@ -95,9 +95,11 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
 
             let mut db = Database::new(&DatabaseMode::ReadWrite, &args.database_path);
 
-            commands::untag::untag_file(&mut db, &file_path, &tags)?;
-
-            Ok((None, ExitCode::SUCCESS))
+            let result = commands::untag::untag_file(&mut db, &file_path, &tags);
+            match result {
+                Ok(()) => Ok((None, ExitCode::SUCCESS)),
+                Err(err) => Ok((Some(err.to_string()), ExitCode::FAILURE)),
+            }
         }
         Command::Tags { file_path } => {
             if !args.database_path.exists() {
@@ -109,13 +111,15 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
 
             let db = Database::new(&DatabaseMode::Read, &args.database_path);
 
-            let out = if let Some(file_path) = file_path {
-                commands::tags::get_file_tags(&db, &file_path)?
+            let result = if let Some(file_path) = file_path {
+                commands::tags::get_file_tags(&db, &file_path)
             } else {
-                commands::tags::get_all_tags(&db)?
+                commands::tags::get_all_tags(&db)
             };
-
-            Ok((Some(out), ExitCode::SUCCESS))
+            match result {
+                Ok(out) => Ok((Some(out), ExitCode::SUCCESS)),
+                Err(err) => Ok((Some(err.to_string()), ExitCode::FAILURE)),
+            }
         }
         Command::RmTags { tags } => {
             if !args.database_path.exists() {
@@ -131,9 +135,12 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
 
             let mut db = Database::new(&DatabaseMode::ReadWrite, &args.database_path);
 
-            commands::rm_tags::rm_tags(&mut db, &tags)?;
+            let result = commands::rm_tags::rm_tags(&mut db, &tags);
 
-            Ok((None, ExitCode::SUCCESS))
+            match result {
+                Ok(()) => Ok((None, ExitCode::SUCCESS)),
+                Err(err) => Ok((Some(err.to_string()), ExitCode::FAILURE)),
+            }
         }
         Command::Files { tags } => {
             if !args.database_path.exists() {
@@ -145,13 +152,15 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
 
             let db = Database::new(&DatabaseMode::Read, &args.database_path);
 
-            let out = if let Some(tags) = tags {
-                commands::files::get_file_paths(&db, &tags)?
+            let result = if let Some(tags) = tags {
+                commands::files::get_file_paths(&db, &tags)
             } else {
-                commands::files::get_files(&db)?
+                commands::files::get_files(&db)
             };
-
-            Ok((Some(out), ExitCode::SUCCESS))
+            match result {
+                Ok(out) => Ok((Some(out), ExitCode::SUCCESS)),
+                Err(err) => Ok((Some(err.to_string()), ExitCode::FAILURE)),
+            }
         }
     }
 }

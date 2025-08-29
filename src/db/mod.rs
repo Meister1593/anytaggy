@@ -86,11 +86,9 @@ impl Database {
 
         // todo: this looks kinda ugly, might be better to use unwrap_or_else (but then no automatic ?)
         let file_id = if let Some(file_id) = get_file_id(&tx, &file.fingerprint_hash)? {
-            debug!("found file_id {file_id}");
             file_id
         } else {
-            let db_file = create_file(&tx, file)?;
-            db_file.id
+            create_file(&tx, file)?.id
         };
         debug!("file_id: {file_id}");
 
