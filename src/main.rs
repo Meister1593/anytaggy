@@ -18,8 +18,7 @@ pub const DATABASE_FILENAME: &str = ".anytaggy.db";
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 pub struct Args {
-    /// Absolute path to database to store tags, files metadata
-    #[arg(short, long)]
+    #[arg(short, long, help = format!("Path to database to store tags, files metadata. Defaults to '{DATABASE_FILENAME}'"))]
     database_path: Option<PathBuf>,
 
     #[command(subcommand)]
