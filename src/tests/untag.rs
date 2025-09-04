@@ -1,6 +1,5 @@
 use std::{path::PathBuf, process::ExitCode};
 
-
 use crate::{Args, entrypoint};
 
 #[test]
