@@ -1,12 +1,11 @@
-use std::{path::PathBuf, process::ExitCode};
+use std::process::ExitCode;
 
 use crate::{Args, entrypoint};
-use temp_dir::TempDir;
 
 #[test]
 fn no_tags_database() {
     let args = Args {
-        database_path: PathBuf::new(),
+        database_path: None,
         command: crate::Command::Tags { file_path: None },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
@@ -17,11 +16,10 @@ fn no_tags_database() {
 #[test]
 fn get_tags() {
     // Test data
-    let temp_dir = TempDir::new().unwrap();
-    let (db_path, tag_file, _, test_tags, _) = super::two_files_multiple_tags_prepare(&temp_dir);
+    let (db_path, tag_file, _, test_tags, _, _temp_dir) = super::two_files_multiple_tags_prepare();
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
@@ -32,7 +30,7 @@ fn get_tags() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tags {
             file_path: Some(tag_file.clone()),
         },
@@ -45,11 +43,10 @@ fn get_tags() {
 #[test]
 fn get_all_tags() {
     // Test data
-    let temp_dir = TempDir::new().unwrap();
-    let (db_path, tag_file, _, test_tags, _) = super::two_files_multiple_tags_prepare(&temp_dir);
+    let (db_path, tag_file, _, test_tags, _, _temp_dir) = super::two_files_multiple_tags_prepare();
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
@@ -60,7 +57,7 @@ fn get_all_tags() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tags { file_path: None },
     };
     let (out, exit_code) = entrypoint(args).unwrap();

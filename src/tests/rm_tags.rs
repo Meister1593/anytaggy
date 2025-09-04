@@ -1,4 +1,4 @@
-use std::{path::PathBuf, process::ExitCode};
+use std::process::ExitCode;
 
 use temp_dir::TempDir;
 
@@ -6,8 +6,11 @@ use crate::{Args, entrypoint};
 
 #[test]
 fn no_rm_tags_database() {
+    let temp_dir = TempDir::new().unwrap();
+    std::env::set_current_dir(temp_dir.path()).unwrap();
+
     let args = Args {
-        database_path: PathBuf::new(),
+        database_path: None,
         command: crate::Command::RmTags { tags: vec![] },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
@@ -18,10 +21,12 @@ fn no_rm_tags_database() {
 #[test]
 fn no_rm_tags_tags() {
     let temp_dir = TempDir::new().unwrap();
-    let (db_path, tag_file, _, test_tags, _) = super::two_files_multiple_tags_prepare(&temp_dir);
+    std::env::set_current_dir(temp_dir.path()).unwrap();
+
+    let (db_path, tag_file, _, test_tags, _, _temp_dir) = super::two_files_multiple_tags_prepare();
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
@@ -32,7 +37,7 @@ fn no_rm_tags_tags() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path: db_path,
+        database_path: Some(db_path.clone()),
         command: crate::Command::RmTags { tags: vec![] },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
@@ -44,10 +49,12 @@ fn no_rm_tags_tags() {
 fn rm_tags() {
     // Test data
     let temp_dir = TempDir::new().unwrap();
-    let (db_path, tag_file, _, test_tags, _) = super::two_files_multiple_tags_prepare(&temp_dir);
+    std::env::set_current_dir(temp_dir.path()).unwrap();
+
+    let (db_path, tag_file, _, test_tags, _, _temp_dir) = super::two_files_multiple_tags_prepare();
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
@@ -58,7 +65,7 @@ fn rm_tags() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tags {
             file_path: Some(tag_file.clone()),
         },
@@ -68,7 +75,7 @@ fn rm_tags() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::RmTags {
             tags: test_tags.clone(),
         },
@@ -78,7 +85,7 @@ fn rm_tags() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tags {
             file_path: Some(tag_file.clone()),
         },
@@ -88,7 +95,7 @@ fn rm_tags() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Files {
             tags: Some(test_tags),
         },

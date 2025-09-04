@@ -1,15 +1,13 @@
 use std::process::ExitCode;
 
 use crate::{Args, entrypoint};
-use temp_dir::TempDir;
 
 #[test]
 fn no_tag_tags() {
-    let temp_dir = TempDir::new().unwrap();
-    let (db_path, tag_file, _, test_tags, _) = super::two_files_multiple_tags_prepare(&temp_dir);
+    let (db_path, tag_file, _, test_tags, _, _temp_dir) = super::two_files_multiple_tags_prepare();
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
@@ -20,7 +18,7 @@ fn no_tag_tags() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path: db_path,
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file.clone(),
             tags: vec![],
@@ -34,12 +32,11 @@ fn no_tag_tags() {
 #[test]
 fn tag_file() {
     // Test data
-    let temp_dir = TempDir::new().unwrap();
-    let (db_path, tag_file, _, test_tags, test_tags_1) =
-        super::two_files_multiple_tags_prepare(&temp_dir);
+    let (db_path, tag_file, _, test_tags, test_tags_1, _temp_dir) =
+        super::two_files_multiple_tags_prepare();
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
@@ -50,7 +47,7 @@ fn tag_file() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags_1.clone(),
@@ -61,7 +58,7 @@ fn tag_file() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path: db_path,
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tags {
             file_path: Some(tag_file),
         },

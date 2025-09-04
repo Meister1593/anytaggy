@@ -28,6 +28,7 @@ pub struct File {
 }
 
 pub enum DatabaseMode {
+    ReadWriteCreate,
     ReadWrite,
     Read,
 }
@@ -46,8 +47,14 @@ impl Database {
     // todo: the only place where unwrap is used, is it fine?
     pub fn new(database_mode: &DatabaseMode, database_path: &Path) -> Self {
         let connection = match database_mode {
-            DatabaseMode::ReadWrite => Connection::open(database_path).unwrap(),
-
+            DatabaseMode::ReadWriteCreate => Connection::open(database_path).unwrap(),
+            DatabaseMode::ReadWrite => Connection::open_with_flags(
+                database_path,
+                OpenFlags::SQLITE_OPEN_READ_WRITE
+                    | OpenFlags::SQLITE_OPEN_NO_MUTEX
+                    | OpenFlags::SQLITE_OPEN_URI,
+            )
+            .unwrap(),
             DatabaseMode::Read => Connection::open_with_flags(
                 database_path,
                 OpenFlags::SQLITE_OPEN_READ_ONLY
@@ -57,7 +64,7 @@ impl Database {
             .unwrap(),
         };
         match database_mode {
-            DatabaseMode::ReadWrite => {
+            DatabaseMode::ReadWrite | DatabaseMode::ReadWriteCreate => {
                 // todo: is it good idea to use migrations here?
                 let mut db = Self { connection };
                 db.apply_migrations();

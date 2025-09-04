@@ -1,12 +1,11 @@
-use std::{path::PathBuf, process::ExitCode};
+use std::process::ExitCode;
 
 use crate::{Args, entrypoint};
-use temp_dir::TempDir;
 
 #[test]
 fn no_files_database() {
     let args = Args {
-        database_path: PathBuf::new(),
+        database_path: None,
         command: crate::Command::Files { tags: None },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
@@ -17,12 +16,11 @@ fn no_files_database() {
 #[test]
 fn files_joined_tag() {
     // Test data
-    let temp_dir: TempDir = TempDir::new().unwrap();
-    let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
-        super::two_files_multiple_tags_prepare(&temp_dir);
+    let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2, _temp_dir) =
+        super::two_files_multiple_tags_prepare();
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file_1.clone(),
             tags: test_tags_1.clone(),
@@ -32,7 +30,7 @@ fn files_joined_tag() {
     assert_eq!(None, out);
     assert_eq!(ExitCode::SUCCESS, exit_code);
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file_2.clone(),
             tags: test_tags_2.clone(),
@@ -43,7 +41,7 @@ fn files_joined_tag() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Files {
             tags: Some(vec!["test3".into()]),
         },
@@ -63,12 +61,11 @@ fn files_joined_tag() {
 #[test]
 fn files_left_tag() {
     // Test data
-    let temp_dir = TempDir::new().unwrap();
-    let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
-        super::two_files_multiple_tags_prepare(&temp_dir);
+    let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2, _temp_dir) =
+        super::two_files_multiple_tags_prepare();
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file_1.clone(),
             tags: test_tags_1.clone(),
@@ -78,7 +75,7 @@ fn files_left_tag() {
     assert_eq!(None, out);
     assert_eq!(ExitCode::SUCCESS, exit_code);
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file_2.clone(),
             tags: test_tags_2.clone(),
@@ -89,7 +86,7 @@ fn files_left_tag() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Files {
             tags: Some(vec!["test".into(), "test2".into()]),
         },
@@ -102,12 +99,11 @@ fn files_left_tag() {
 #[test]
 fn files_right_tag() {
     // Test data
-    let temp_dir = TempDir::new().unwrap();
-    let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
-        super::two_files_multiple_tags_prepare(&temp_dir);
+    let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2, _temp_dir) =
+        super::two_files_multiple_tags_prepare();
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file_1.clone(),
             tags: test_tags_1.clone(),
@@ -117,7 +113,7 @@ fn files_right_tag() {
     assert_eq!(None, out);
     assert_eq!(ExitCode::SUCCESS, exit_code);
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file_2.clone(),
             tags: test_tags_2.clone(),
@@ -128,7 +124,7 @@ fn files_right_tag() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Files {
             tags: Some(vec!["test4".into()]),
         },
@@ -141,12 +137,11 @@ fn files_right_tag() {
 #[test]
 fn files_neither_tag() {
     // Test data
-    let temp_dir = TempDir::new().unwrap();
-    let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
-        super::two_files_multiple_tags_prepare(&temp_dir);
+    let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2, _temp_dir) =
+        super::two_files_multiple_tags_prepare();
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file_1.clone(),
             tags: test_tags_1.clone(),
@@ -156,7 +151,7 @@ fn files_neither_tag() {
     assert_eq!(None, out);
     assert_eq!(ExitCode::SUCCESS, exit_code);
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file_2.clone(),
             tags: test_tags_2.clone(),
@@ -167,7 +162,7 @@ fn files_neither_tag() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Files {
             tags: Some([&test_tags_1[..], &test_tags_2[..]].concat().clone()),
         },
@@ -180,12 +175,11 @@ fn files_neither_tag() {
 #[test]
 fn get_all_files() {
     // Test data
-    let temp_dir = TempDir::new().unwrap();
-    let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2) =
-        super::two_files_multiple_tags_prepare(&temp_dir);
+    let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2, _temp_dir) =
+        super::two_files_multiple_tags_prepare();
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file_1.clone(),
             tags: test_tags_1.clone(),
@@ -195,7 +189,7 @@ fn get_all_files() {
     assert_eq!(None, out);
     assert_eq!(ExitCode::SUCCESS, exit_code);
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Tag {
             file_path: tag_file_2.clone(),
             tags: test_tags_2.clone(),
@@ -206,7 +200,7 @@ fn get_all_files() {
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
-        database_path: db_path.clone(),
+        database_path: Some(db_path.clone()),
         command: crate::Command::Files { tags: None },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
