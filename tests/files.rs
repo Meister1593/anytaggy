@@ -6,6 +6,8 @@ use std::process::ExitCode;
 
 #[test]
 fn no_files_database() {
+    let (_, _, _, _, _, _temp_dir) = two_files_multiple_tags_prepare();
+
     let args = Args {
         database_path: None,
         command: Command::Files { tags: None },
@@ -215,4 +217,29 @@ fn get_all_files() {
         out
     );
     assert_eq!(ExitCode::SUCCESS, exit_code);
+}
+
+#[test]
+fn no_tags_specified() {
+    // Test data
+    let (db_path, tag_file_1, _, test_tags_1, _, _temp_dir) = two_files_multiple_tags_prepare();
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Tag {
+            file_path: tag_file_1.clone(),
+            tags: test_tags_1.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Files { tags: Some(vec![]) },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(Some("ERROR: No tags specified".into()), out);
+    assert_eq!(ExitCode::FAILURE, exit_code);
 }

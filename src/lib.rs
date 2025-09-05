@@ -3,6 +3,7 @@ mod commands;
 mod db;
 
 use crate::db::{Database, DatabaseMode};
+use anyhow::anyhow;
 use clap::{Parser, Subcommand, builder::NonEmptyStringValueParser};
 use std::{
     path::{Path, PathBuf},
@@ -184,7 +185,11 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
             let db = Database::new(&DatabaseMode::Read, &database_path);
 
             let result = if let Some(tags) = tags {
-                commands::files::get_file_paths(&db, &tags)
+                if tags.is_empty() {
+                    Err(anyhow!("ERROR: No tags specified"))
+                } else {
+                    commands::files::get_file_paths(&db, &tags)
+                }
             } else {
                 commands::files::get_files(&db)
             };

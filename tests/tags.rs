@@ -7,6 +7,8 @@ use crate::common::two_files_multiple_tags_prepare;
 
 #[test]
 fn no_tags_database() {
+    let (_, _, _, _, _, _temp_dir) = two_files_multiple_tags_prepare();
+
     let args = Args {
         database_path: None,
         command: Command::Tags { file_path: None },

@@ -157,3 +157,72 @@ fn files_clean_after_delete_untag() {
     assert_eq!(Some(String::new()), out);
     assert_eq!(ExitCode::SUCCESS, exit_code);
 }
+
+#[test]
+fn no_such_file() {
+    // Test data
+    let (db_path, tag_file, tag_file_2, test_tags, _, _temp_dir) =
+        two_files_multiple_tags_prepare();
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Tag {
+            file_path: tag_file.clone(),
+            tags: test_tags.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Untag {
+            file_path: tag_file_2.clone(),
+            tags: test_tags.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(Some("Could not find such file in database".into()), out);
+    assert_eq!(ExitCode::FAILURE, exit_code);
+}
+
+#[test]
+fn no_such_tag_on_file() {
+    // Test data
+    let (db_path, tag_file, tag_file_2, test_tags, test_tags_2, _temp_dir) =
+        two_files_multiple_tags_prepare();
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Tag {
+            file_path: tag_file.clone(),
+            tags: test_tags.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Tag {
+            file_path: tag_file_2.clone(),
+            tags: test_tags_2.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Untag {
+            file_path: tag_file.clone(),
+            tags: test_tags_2.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert!(out.unwrap().starts_with("File did not have such tag: "));
+    assert_eq!(ExitCode::FAILURE, exit_code);
+}

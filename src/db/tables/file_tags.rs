@@ -1,6 +1,5 @@
 use anyhow::Result;
 use rusqlite::{Connection, Transaction};
-use std::vec;
 use tracing::debug;
 
 pub fn unreference_file_tag(tx: &Transaction, file_id: i32, tag_id: i32) -> Result<()> {
@@ -63,10 +62,6 @@ pub fn get_file_paths_by_tags_and_op(
     conn: &Connection,
     tag_names: &[String],
 ) -> Result<Vec<String>> {
-    if tag_names.is_empty() {
-        return Ok(vec![]);
-    }
-
     let tag_names: Vec<String> = tag_names
         .iter()
         .map(|tag_name| format!("'{tag_name}'"))
