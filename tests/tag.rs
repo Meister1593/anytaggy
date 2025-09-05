@@ -1,14 +1,17 @@
+mod common;
+
+use anytaggy::{Args, Command, entrypoint};
 use std::process::ExitCode;
 
-use crate::{Args, entrypoint};
+use crate::common::two_files_multiple_tags_prepare;
 
 #[test]
 fn no_tag_tags() {
-    let (db_path, tag_file, _, test_tags, _, _temp_dir) = super::two_files_multiple_tags_prepare();
+    let (db_path, tag_file, _, test_tags, _, _temp_dir) = two_files_multiple_tags_prepare();
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tag {
+        command: Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
         },
@@ -19,7 +22,7 @@ fn no_tag_tags() {
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tag {
+        command: Command::Tag {
             file_path: tag_file.clone(),
             tags: vec![],
         },
@@ -33,11 +36,11 @@ fn no_tag_tags() {
 fn tag_file() {
     // Test data
     let (db_path, tag_file, _, test_tags, test_tags_1, _temp_dir) =
-        super::two_files_multiple_tags_prepare();
+        two_files_multiple_tags_prepare();
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tag {
+        command: Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
         },
@@ -48,7 +51,7 @@ fn tag_file() {
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tag {
+        command: Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags_1.clone(),
         },
@@ -59,7 +62,7 @@ fn tag_file() {
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tags {
+        command: Command::Tags {
             file_path: Some(tag_file),
         },
     };

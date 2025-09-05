@@ -1,8 +1,9 @@
+mod common;
+
+use crate::common::create_random_file;
+use anytaggy::{Args, Command, DATABASE_FILENAME, entrypoint};
 use std::{fs::create_dir, path::PathBuf, process::ExitCode};
-
 use temp_dir::TempDir;
-
-use crate::{Args, DATABASE_FILENAME, entrypoint, tests::create_random_file};
 
 #[test]
 fn create_and_find_database_in_parent() {
@@ -18,7 +19,7 @@ fn create_and_find_database_in_parent() {
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tag {
+        command: Command::Tag {
             file_path: tag_file,
             tags: test_tags,
         },
@@ -30,7 +31,7 @@ fn create_and_find_database_in_parent() {
     std::env::set_current_dir(subfolder).unwrap();
     let args = Args {
         database_path: None,
-        command: crate::Command::Tags { file_path: None },
+        command: Command::Tags { file_path: None },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
     assert_eq!(Some("test".into()), out);
@@ -48,7 +49,7 @@ fn create_and_find_database_in_current_dir() {
 
     let args = Args {
         database_path: None,
-        command: crate::Command::Tag {
+        command: Command::Tag {
             file_path: tag_file,
             tags: test_tags,
         },
@@ -59,7 +60,7 @@ fn create_and_find_database_in_current_dir() {
 
     let args = Args {
         database_path: None,
-        command: crate::Command::Tags { file_path: None },
+        command: Command::Tags { file_path: None },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
     assert_eq!(Some("test".into()), out);
@@ -73,7 +74,7 @@ fn dont_find_database() {
 
     let args = Args {
         database_path: Some(PathBuf::default()),
-        command: crate::Command::Tags { file_path: None },
+        command: Command::Tags { file_path: None },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
     assert_eq!(

@@ -1,12 +1,14 @@
-use std::{path::PathBuf, process::ExitCode};
+mod common;
 
-use crate::{Args, entrypoint};
+use crate::common::two_files_multiple_tags_prepare;
+use anytaggy::{Args, Command, entrypoint};
+use std::{path::PathBuf, process::ExitCode};
 
 #[test]
 fn no_untag_database() {
     let args = Args {
         database_path: None,
-        command: crate::Command::Untag {
+        command: Command::Untag {
             file_path: PathBuf::new(),
             tags: vec![],
         },
@@ -18,11 +20,11 @@ fn no_untag_database() {
 
 #[test]
 fn no_tag_tags() {
-    let (db_path, tag_file, _, test_tags, _, _temp_dir) = super::two_files_multiple_tags_prepare();
+    let (db_path, tag_file, _, test_tags, _, _temp_dir) = two_files_multiple_tags_prepare();
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tag {
+        command: Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
         },
@@ -33,7 +35,7 @@ fn no_tag_tags() {
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Untag {
+        command: Command::Untag {
             file_path: tag_file.clone(),
             tags: vec![],
         },
@@ -46,11 +48,11 @@ fn no_tag_tags() {
 #[test]
 fn untag_file() {
     // Test data
-    let (db_path, tag_file, _, test_tags, _, _temp_dir) = super::two_files_multiple_tags_prepare();
+    let (db_path, tag_file, _, test_tags, _, _temp_dir) = two_files_multiple_tags_prepare();
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tag {
+        command: Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
         },
@@ -61,7 +63,7 @@ fn untag_file() {
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tags {
+        command: Command::Tags {
             file_path: Some(tag_file.clone()),
         },
     };
@@ -72,7 +74,7 @@ fn untag_file() {
     let random_tag_name = "random_tag".to_string();
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Untag {
+        command: Command::Untag {
             file_path: tag_file.clone(),
             tags: vec![random_tag_name.clone()],
         },
@@ -88,7 +90,7 @@ fn untag_file() {
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Untag {
+        command: Command::Untag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
         },
@@ -99,7 +101,7 @@ fn untag_file() {
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tags {
+        command: Command::Tags {
             file_path: Some(tag_file.clone()),
         },
     };
@@ -111,11 +113,11 @@ fn untag_file() {
 #[test]
 fn files_clean_after_delete_untag() {
     // Test data
-    let (db_path, tag_file, _, test_tags, _, _temp_dir) = super::two_files_multiple_tags_prepare();
+    let (db_path, tag_file, _, test_tags, _, _temp_dir) = two_files_multiple_tags_prepare();
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tag {
+        command: Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
         },
@@ -126,7 +128,7 @@ fn files_clean_after_delete_untag() {
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tags {
+        command: Command::Tags {
             file_path: Some(tag_file.clone()),
         },
     };
@@ -136,7 +138,7 @@ fn files_clean_after_delete_untag() {
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Untag {
+        command: Command::Untag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
         },
@@ -147,7 +149,7 @@ fn files_clean_after_delete_untag() {
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Files {
+        command: Command::Files {
             tags: Some(test_tags.clone()),
         },
     };

@@ -1,12 +1,15 @@
+mod common;
+
+use anytaggy::{Args, Command, entrypoint};
 use std::process::ExitCode;
 
-use crate::{Args, entrypoint};
+use crate::common::two_files_multiple_tags_prepare;
 
 #[test]
 fn no_tags_database() {
     let args = Args {
         database_path: None,
-        command: crate::Command::Tags { file_path: None },
+        command: Command::Tags { file_path: None },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
     assert_eq!(Some("ERROR: Database file could not be found".into()), out);
@@ -16,11 +19,11 @@ fn no_tags_database() {
 #[test]
 fn get_tags() {
     // Test data
-    let (db_path, tag_file, _, test_tags, _, _temp_dir) = super::two_files_multiple_tags_prepare();
+    let (db_path, tag_file, _, test_tags, _, _temp_dir) = two_files_multiple_tags_prepare();
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tag {
+        command: Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
         },
@@ -31,7 +34,7 @@ fn get_tags() {
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tags {
+        command: Command::Tags {
             file_path: Some(tag_file.clone()),
         },
     };
@@ -43,11 +46,11 @@ fn get_tags() {
 #[test]
 fn get_all_tags() {
     // Test data
-    let (db_path, tag_file, _, test_tags, _, _temp_dir) = super::two_files_multiple_tags_prepare();
+    let (db_path, tag_file, _, test_tags, _, _temp_dir) = two_files_multiple_tags_prepare();
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tag {
+        command: Command::Tag {
             file_path: tag_file.clone(),
             tags: test_tags.clone(),
         },
@@ -58,7 +61,7 @@ fn get_all_tags() {
 
     let args = Args {
         database_path: Some(db_path.clone()),
-        command: crate::Command::Tags { file_path: None },
+        command: Command::Tags { file_path: None },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
     assert_eq!(Some(test_tags.join(",")), out);

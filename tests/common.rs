@@ -1,16 +1,10 @@
-mod entrypoint;
-mod files;
-mod rm_tags;
-mod tag;
-mod tags;
-mod untag;
-
-use rand::prelude::*;
 use std::{
     fs::File,
     io::Write,
     path::{Path, PathBuf},
 };
+
+use rand::Rng;
 use temp_dir::TempDir;
 
 pub fn create_random_file(dir_path: &Path, name: &str) -> PathBuf {
@@ -21,6 +15,7 @@ pub fn create_random_file(dir_path: &Path, name: &str) -> PathBuf {
     tag_file
 }
 
+#[allow(dead_code)]
 pub fn two_files_multiple_tags_prepare()
 -> (PathBuf, PathBuf, PathBuf, Vec<String>, Vec<String>, TempDir) {
     let temp_dir = TempDir::new().unwrap();
@@ -40,5 +35,3 @@ pub fn two_files_multiple_tags_prepare()
         temp_dir,
     )
 }
-
-// todo: test cases with trimming to be added
