@@ -37,10 +37,6 @@ pub struct Database {
 }
 impl Database {
     fn apply_migrations(&mut self) {
-        self.connection
-            .pragma_update_and_check(None, "journal_mode", "WAL", |_| Ok(()))
-            .unwrap();
-
         MIGRATIONS.to_latest(&mut self.connection).unwrap();
     }
 
