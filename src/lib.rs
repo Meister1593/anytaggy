@@ -137,9 +137,11 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
 
             let mut db = Database::new(&DatabaseMode::ReadWriteCreate, &database_path);
 
-            commands::tag::tag_file(&mut db, &file_path, &tags)?;
-
-            Ok(None)
+            let result = commands::tag::tag_file(&mut db, &file_path, &tags);
+            match result {
+                Ok(()) => Ok(None),
+                Err(err) => Err(err),
+            }
         }
         Command::Untag { file_path, tags } => {
             if tags.is_empty() {
