@@ -172,7 +172,7 @@ fn files_neither_tag() {
         },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(Some(String::new()), out);
+    assert_eq!(None, out);
     assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 

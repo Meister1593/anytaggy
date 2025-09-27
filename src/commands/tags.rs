@@ -3,7 +3,7 @@ use anyhow::Result;
 use std::path::Path;
 use tracing::debug;
 
-pub fn get_file_tags(db: &Database, file_path: &Path) -> Result<String> {
+pub fn get_file_tags(db: &Database, file_path: &Path) -> Result<Option<String>> {
     debug!("file_path: {}", file_path.display());
 
     let contents_hash = super::get_file_contents_hash(file_path)?;
@@ -12,9 +12,24 @@ pub fn get_file_tags(db: &Database, file_path: &Path) -> Result<String> {
     let fingerprint_hash =
         super::get_fingerprint_hash(&contents_hash, &file_path.display().to_string())?;
     debug!("fingerprint_hash: {fingerprint_hash}");
-    Ok(db.get_file_tags(&fingerprint_hash)?.join(",").to_string())
+
+    let file_tags = db.get_file_tags(&fingerprint_hash)?;
+    debug!("file_tags: {file_tags:?}");
+
+    if file_tags.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(file_tags.join(",").to_string()))
+    }
 }
 
-pub fn get_all_tags(db: &Database) -> Result<String> {
-    Ok(db.get_all_tags()?.join(",").to_string())
+pub fn get_all_tags(db: &Database) -> Result<Option<String>> {
+    let file_tags = db.get_all_tags()?;
+    debug!("file_tags: {file_tags:?}");
+
+    if file_tags.is_empty() {
+        Ok(None)
+    } else {
+        Ok(Some(file_tags.join(",").to_string()))
+    }
 }

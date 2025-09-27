@@ -129,7 +129,7 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
     };
     debug!("database_path: {}", database_path.display());
 
-    match args.command {
+    let result = match args.command {
         Command::Tag { file_path, tags } => {
             if tags.is_empty() {
                 return Ok((Some("ERROR: No tags specified".into()), ExitCode::FAILURE));
@@ -139,7 +139,7 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
 
             commands::tag::tag_file(&mut db, &file_path, &tags)?;
 
-            Ok((None, ExitCode::SUCCESS))
+            Ok(None)
         }
         Command::Untag { file_path, tags } => {
             if tags.is_empty() {
@@ -150,21 +150,17 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
 
             let result = commands::untag::untag_file(&mut db, &file_path, &tags);
             match result {
-                Ok(()) => Ok((None, ExitCode::SUCCESS)),
-                Err(err) => Ok((Some(err.to_string()), ExitCode::FAILURE)),
+                Ok(()) => Ok(None),
+                Err(err) => Err(err),
             }
         }
         Command::Tags { file_path } => {
             let db = Database::new(&DatabaseMode::Read, &database_path);
 
-            let result = if let Some(file_path) = file_path {
+            if let Some(file_path) = file_path {
                 commands::tags::get_file_tags(&db, &file_path)
             } else {
                 commands::tags::get_all_tags(&db)
-            };
-            match result {
-                Ok(out) => Ok((Some(out), ExitCode::SUCCESS)),
-                Err(err) => Ok((Some(err.to_string()), ExitCode::FAILURE)),
             }
         }
         Command::RmTags { tags } => {
@@ -175,16 +171,15 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
             let mut db = Database::new(&DatabaseMode::ReadWrite, &database_path);
 
             let result = commands::rm_tags::rm_tags(&mut db, &tags);
-
             match result {
-                Ok(()) => Ok((None, ExitCode::SUCCESS)),
-                Err(err) => Ok((Some(err.to_string()), ExitCode::FAILURE)),
+                Ok(()) => Ok(None),
+                Err(err) => Err(err),
             }
         }
         Command::Files { tags } => {
             let db = Database::new(&DatabaseMode::Read, &database_path);
 
-            let result = if let Some(tags) = tags {
+            if let Some(tags) = tags {
                 if tags.is_empty() {
                     Err(anyhow!("ERROR: No tags specified"))
                 } else {
@@ -192,11 +187,11 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
                 }
             } else {
                 commands::files::get_files(&db)
-            };
-            match result {
-                Ok(out) => Ok((Some(out), ExitCode::SUCCESS)),
-                Err(err) => Ok((Some(err.to_string()), ExitCode::FAILURE)),
             }
         }
+    };
+    match result {
+        Ok(out) => Ok((out, ExitCode::SUCCESS)),
+        Err(err) => Ok((Some(err.to_string()), ExitCode::FAILURE)),
     }
 }

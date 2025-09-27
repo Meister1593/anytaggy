@@ -83,7 +83,7 @@ fn rm_tags() {
         },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(Some(String::new()), out);
+    assert_eq!(None, out);
     assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
@@ -93,7 +93,7 @@ fn rm_tags() {
         },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(Some(String::new()), out);
+    assert_eq!(None, out);
     assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
@@ -120,9 +120,9 @@ fn no_such_tag() {
     };
     let (out, exit_code) = entrypoint(args).unwrap();
 
-    assert!(
-        out.unwrap()
-            .starts_with("Could not find such tag in database: ")
+    assert_eq!(
+        out.unwrap(),
+        "Could not find such tag in database: random-tag"
     );
     assert_eq!(ExitCode::FAILURE, exit_code);
 }

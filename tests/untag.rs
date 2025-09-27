@@ -5,7 +5,7 @@ use anytaggy::{Args, Command, entrypoint};
 use std::{path::PathBuf, process::ExitCode};
 
 #[test]
-fn no_untag_database() {
+fn no_tags_specified() {
     let args = Args {
         database_path: None,
         command: Command::Untag {
@@ -14,7 +14,7 @@ fn no_untag_database() {
         },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(Some("ERROR: Database file could not be found".into()), out);
+    assert_eq!(Some("ERROR: No tags specified".into()), out);
     assert_eq!(ExitCode::FAILURE, exit_code);
 }
 
@@ -106,7 +106,7 @@ fn untag_file() {
         },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(Some(String::new()), out);
+    assert_eq!(None, out);
     assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
@@ -154,7 +154,7 @@ fn files_clean_after_delete_untag() {
         },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(Some(String::new()), out);
+    assert_eq!(None, out);
     assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
