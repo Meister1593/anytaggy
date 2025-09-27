@@ -2,8 +2,9 @@ mod common;
 
 use anytaggy::{Args, Command, entrypoint};
 use std::process::ExitCode;
+use temp_dir::TempDir;
 
-use crate::common::two_files_multiple_tags_prepare;
+use crate::common::{create_random_file, two_files_multiple_tags_prepare};
 
 #[test]
 fn no_tag_tags() {
@@ -72,4 +73,28 @@ fn tag_file() {
     out_tags.dedup();
     assert_eq!(Some(out_tags.join(",")), out);
     assert_eq!(ExitCode::SUCCESS, exit_code);
+}
+
+#[test]
+fn tag_file_in_parent_directory_without_db() {
+    let temp_dir = TempDir::new().unwrap();
+    std::env::set_current_dir(temp_dir.path()).unwrap();
+    let db_parent_path = temp_dir.path().join("parent");
+    std::fs::create_dir(&db_parent_path).unwrap();
+    let db_path = &db_parent_path.join("tmp_db.db");
+    let tag_file_1 = create_random_file(&db_parent_path, "temp_tag_file_1");
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Tag {
+            file_path: tag_file_1.clone(),
+            tags: vec!["test".into()],
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(
+        Some("ERROR: Could not access file outside of database structure".into()),
+        out
+    );
+    assert_eq!(ExitCode::FAILURE, exit_code);
 }
