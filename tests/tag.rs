@@ -82,7 +82,7 @@ fn tag_file_in_parent_directory_without_db() {
     let db_parent_path = temp_dir.path().join("parent");
     std::fs::create_dir(&db_parent_path).unwrap();
     let db_path = &db_parent_path.join("tmp_db.db");
-    let tag_file_1 = create_random_file(&db_parent_path, "temp_tag_file_1");
+    let tag_file_1 = create_random_file(temp_dir.path(), "temp_tag_file_1");
 
     let args = Args {
         database_path: Some(db_path.clone()),

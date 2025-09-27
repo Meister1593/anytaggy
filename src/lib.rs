@@ -90,6 +90,7 @@ fn search_database_in_parent_folders(
 }
 
 #[allow(clippy::missing_errors_doc)]
+#[allow(clippy::too_many_lines)]
 pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
     let is_tag_subcommand = matches!(
         args.command,
@@ -137,6 +138,13 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
 
             let mut db = Database::new(&DatabaseMode::ReadWriteCreate, &database_path);
 
+            if !check_file_paths_for_subdirectory(&database_path, &file_path)? {
+                return Ok((
+                    Some("ERROR: Could not access file outside of database structure".into()),
+                    ExitCode::FAILURE,
+                ));
+            }
+
             let result = commands::tag::tag_file(&mut db, &file_path, &tags);
             match result {
                 Ok(()) => Ok(None),
@@ -150,6 +158,13 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
 
             let mut db = Database::new(&DatabaseMode::ReadWrite, &database_path);
 
+            if !check_file_paths_for_subdirectory(&database_path, &file_path)? {
+                return Ok((
+                    Some("ERROR: Could not access file outside of database structure".into()),
+                    ExitCode::FAILURE,
+                ));
+            }
+
             let result = commands::untag::untag_file(&mut db, &file_path, &tags);
             match result {
                 Ok(()) => Ok(None),
@@ -160,6 +175,13 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
             let db = Database::new(&DatabaseMode::Read, &database_path);
 
             if let Some(file_path) = file_path {
+                if !check_file_paths_for_subdirectory(&database_path, &file_path)? {
+                    return Ok((
+                        Some("ERROR: Could not access file outside of database structure".into()),
+                        ExitCode::FAILURE,
+                    ));
+                }
+
                 commands::tags::get_file_tags(&db, &file_path)
             } else {
                 commands::tags::get_all_tags(&db)
@@ -196,4 +218,17 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
         Ok(out) => Ok((out, ExitCode::SUCCESS)),
         Err(err) => Ok((Some(err.to_string()), ExitCode::FAILURE)),
     }
+}
+
+fn check_file_paths_for_subdirectory(parent: &Path, child: &Path) -> anyhow::Result<bool> {
+    let parent = parent.canonicalize()?;
+    debug!("parent_cannonical_path: {}", parent.display());
+
+    let parent = parent.parent().expect("Could not get parent path");
+    debug!("parent_path: {}", parent.display());
+
+    let child = child.canonicalize()?;
+    debug!("child_cannonical_path: {}", child.display());
+
+    Ok(child.starts_with(parent))
 }
