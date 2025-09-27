@@ -68,4 +68,20 @@ fn get_all_tags() {
     let (out, exit_code) = entrypoint(args).unwrap();
     assert_eq!(Some(test_tags.join(",")), out);
     assert_eq!(ExitCode::SUCCESS, exit_code);
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::RmTags { tags: test_tags },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Tags { file_path: None },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
 }

@@ -177,7 +177,7 @@ fn files_neither_tag() {
 }
 
 #[test]
-fn get_all_files() {
+fn get_files() {
     // Test data
     let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2, _temp_dir) =
         two_files_multiple_tags_prepare();
@@ -216,6 +216,34 @@ fn get_all_files() {
         )),
         out
     );
+    assert_eq!(ExitCode::SUCCESS, exit_code);
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Untag {
+            file_path: tag_file_1.clone(),
+            tags: test_tags_1.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Untag {
+            file_path: tag_file_2.clone(),
+            tags: test_tags_2.clone(),
+        },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+    assert_eq!(ExitCode::SUCCESS, exit_code);
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Files { tags: None },
+    };
+    let (out, exit_code) = entrypoint(args).unwrap();
+    assert_eq!(None, out);
     assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
