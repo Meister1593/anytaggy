@@ -66,16 +66,6 @@ pub enum Command {
     },
 }
 
-fn search_database_in_parent_folders() -> Option<PathBuf> {
-    match lets_find_up::find_up(DATABASE_FILENAME) {
-        Ok(res) => res,
-        Err(e) => {
-            error!("{e:?}");
-            None
-        }
-    }
-}
-
 #[allow(clippy::missing_errors_doc)]
 #[allow(clippy::too_many_lines)]
 pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
@@ -98,19 +88,18 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
 
         database_path
     } else if let Some(database_path) = search_database_in_parent_folders() {
+        // Search database path from current and parent folders
         database_path
-    } else {
+    } else if is_tag_subcommand {
         // If it's a root and we still couldn't find database, check if it's a tag subcommand
-        if is_tag_subcommand {
-            // If it is, then assume initial path to be the right one (new database will be created)
-            std::env::current_dir()?.join(DATABASE_FILENAME)
-        } else {
-            // If it's not found and database will not be created - error out
-            return Ok((
-                Some("ERROR: Database file could not be found".into()),
-                ExitCode::FAILURE,
-            ));
-        }
+        //  and if true, assume initial path to be the right one (new database will be created)
+        std::env::current_dir()?.join(DATABASE_FILENAME)
+    } else {
+        // If it's not found and database will not be created - error out
+        return Ok((
+            Some("ERROR: Database file could not be found".into()),
+            ExitCode::FAILURE,
+        ));
     };
     debug!("database_path: {}", database_path.display());
 
@@ -202,4 +191,14 @@ fn check_file_paths_for_subdirectory(parent: &Path, child: &Path) -> anyhow::Res
     debug!("child_cannonical_path: {}", child.display());
 
     Ok(child.starts_with(parent))
+}
+
+fn search_database_in_parent_folders() -> Option<PathBuf> {
+    match lets_find_up::find_up(DATABASE_FILENAME) {
+        Ok(res) => res,
+        Err(e) => {
+            error!("{e:?}");
+            None
+        }
+    }
 }
