@@ -1,6 +1,17 @@
+use crate::db::Database;
 use anyhow::Result;
 use rusqlite::{Connection, Transaction};
 use tracing::debug;
+
+impl Database {
+    pub fn get_file_tags(&self, fingerprint_hash: &str) -> Result<Vec<String>> {
+        get_file_tags_by_hash(&self.connection, fingerprint_hash)
+    }
+
+    pub fn get_files_by_tag(&self, tag_names: &[String]) -> Result<Vec<String>> {
+        get_file_paths_by_tags_and_op(&self.connection, tag_names)
+    }
+}
 
 pub fn unreference_file_tag(tx: &Transaction, file_id: i32, tag_id: i32) -> Result<()> {
     tx.execute(
