@@ -2,7 +2,7 @@ use crate::db::{
     Database, File,
     tables::{
         file_tags::{get_file_tag_ids_by_id, reference_file_tag},
-        files::{create_file, delete_file, get_all_file_ids_without_tags, get_file_id},
+        files::{create_file, get_file_id},
     },
 };
 use anyhow::{Result, bail};
@@ -19,31 +19,24 @@ pub(in crate::db) struct DbTag {
 impl Database {
     pub fn tag_file(&mut self, file: &File, tag_names: &[String]) -> Result<()> {
         let tx = self.connection.transaction()?;
-        let mut db_tag_ids = vec![];
 
-        for tag_name in tag_names {
-            let tag_name = tag_name.trim();
-            let tag_id = if let Some(tag_id) = get_tag_id_by_name(&tx, tag_name)? {
-                tag_id
-            } else {
-                let db_tag = create_tag(&tx, tag_name)?;
-                info!("created tag: {tag_name}");
-                db_tag.id
-            };
-            debug!("tag_id: {tag_id}");
-            db_tag_ids.push(tag_id);
-        }
-
-        // todo: this looks kinda ugly, might be better to use unwrap_or_else (but then no automatic ?)
-        let file_id = if let Some(file_id) = get_file_id(&tx, &file.fingerprint_hash)? {
-            file_id
-        } else {
-            create_file(&tx, file)?.id
-        };
+        let file_id = get_file_id(&tx, &file.fingerprint_hash)?
+            .map_or_else(|| create_file(&tx, file).map(|f| f.id), Ok)?;
         debug!("file_id: {file_id}");
 
-        let file_tag_ids: Vec<i32> = get_file_tag_ids_by_id(&tx, file_id)?;
-        for tag_id in db_tag_ids {
+        let file_tag_ids = get_file_tag_ids_by_id(&tx, file_id)?;
+        for tag_name in tag_names {
+            let tag_name = tag_name.trim();
+            let tag_id = get_tag_id_by_name(&tx, tag_name)?.map_or_else(
+                || {
+                    let tag_id = create_tag(&tx, tag_name).map(|tag| tag.id);
+                    info!("created tag: {tag_name}");
+                    tag_id
+                },
+                Ok,
+            )?;
+            debug!("tag_id: {tag_id}");
+
             if !file_tag_ids.contains(&tag_id) {
                 reference_file_tag(&tx, file_id, tag_id)?;
             }
@@ -67,16 +60,27 @@ impl Database {
             delete_tag(&tx, tag.id)?;
         }
 
-        for id in get_all_file_ids_without_tags(&tx)? {
-            delete_file(&tx, id)?;
-        }
-
         tx.commit()?;
         Ok(())
     }
 }
 
-pub fn delete_tag(tx: &Transaction, id: i32) -> Result<()> {
+pub fn get_tag_by_name(conn: &Connection, name: &str) -> Result<Option<DbTag>> {
+    let mut query = conn.prepare(
+        "SELECT * FROM tags 
+             WHERE name = ?1",
+    )?;
+
+    Ok(query
+        .query_one([name], |row| {
+            Ok(DbTag {
+                id: row.get(0)?,
+                name: row.get(1)?,
+            })
+        })
+        .optional()?)
+}
+fn delete_tag(tx: &Transaction, id: i32) -> Result<()> {
     tx.execute(
         "DELETE FROM tags
              WHERE id = ?1",
@@ -87,7 +91,7 @@ pub fn delete_tag(tx: &Transaction, id: i32) -> Result<()> {
     Ok(())
 }
 
-pub fn create_tag(tx: &Transaction, name: &str) -> Result<DbTag> {
+fn create_tag(tx: &Transaction, name: &str) -> Result<DbTag> {
     let mut insert = tx.prepare(
         "INSERT INTO tags (name) 
              VALUES (?1) 
@@ -105,7 +109,7 @@ pub fn create_tag(tx: &Transaction, name: &str) -> Result<DbTag> {
     Ok(db_tag)
 }
 
-pub fn get_tag_names(conn: &Connection) -> Result<Vec<String>> {
+fn get_tag_names(conn: &Connection) -> Result<Vec<String>> {
     let mut query = conn.prepare("SELECT name FROM tags")?;
 
     Ok(query
@@ -114,27 +118,11 @@ pub fn get_tag_names(conn: &Connection) -> Result<Vec<String>> {
         .collect())
 }
 
-pub fn get_tag_id_by_name(conn: &Connection, name: &str) -> Result<Option<i32>> {
+fn get_tag_id_by_name(conn: &Connection, name: &str) -> Result<Option<i32>> {
     let mut query = conn.prepare(
         "SELECT id FROM tags 
              WHERE name = ?1",
     )?;
 
     Ok(query.query_one([name], |row| row.get(0)).optional()?)
-}
-
-pub fn get_tag_by_name(conn: &Connection, name: &str) -> Result<Option<DbTag>> {
-    let mut query = conn.prepare(
-        "SELECT * FROM tags 
-             WHERE name = ?1",
-    )?;
-
-    Ok(query
-        .query_one([name], |row| {
-            Ok(DbTag {
-                id: row.get(0)?,
-                name: row.get(1)?,
-            })
-        })
-        .optional()?)
 }

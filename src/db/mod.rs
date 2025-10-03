@@ -28,6 +28,12 @@ impl Database {
         MIGRATIONS.to_latest(&mut self.connection).unwrap();
     }
 
+    fn apply_runtime_options(&mut self) {
+        self.connection
+            .execute("PRAGMA foreign_keys = ON", [])
+            .unwrap();
+    }
+
     // todo: the only place where unwrap is used, is it fine?
     pub fn new(database_mode: &DatabaseMode, database_path: &Path) -> Self {
         let connection = match database_mode {
@@ -50,7 +56,8 @@ impl Database {
         match database_mode {
             DatabaseMode::ReadWrite | DatabaseMode::ReadWriteCreate => {
                 // todo: is it good idea to use migrations here?
-                let mut db: Database = Self { connection };
+                let mut db = Self { connection };
+                db.apply_runtime_options();
                 db.apply_migrations();
                 db
             }

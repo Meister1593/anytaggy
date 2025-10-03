@@ -35,7 +35,7 @@ pub fn reference_file_tag(tx: &Transaction, file_id: i32, tag_id: i32) -> Result
     Ok(())
 }
 
-pub fn get_file_tags_by_hash(conn: &Connection, fingerprint_hash: &str) -> Result<Vec<String>> {
+fn get_file_tags_by_hash(conn: &Connection, fingerprint_hash: &str) -> Result<Vec<String>> {
     let mut statement = conn.prepare(
         "SELECT t.name 
         FROM tags t 
@@ -64,10 +64,7 @@ pub fn get_file_tag_ids_by_id(conn: &Connection, file_id: i32) -> Result<Vec<i32
         .collect())
 }
 
-pub fn get_file_paths_by_tags_and_op(
-    conn: &Connection,
-    tag_names: &[String],
-) -> Result<Vec<String>> {
+fn get_file_paths_by_tags_and_op(conn: &Connection, tag_names: &[String]) -> Result<Vec<String>> {
     let tag_names: Vec<String> = tag_names
         .iter()
         .map(|tag_name| format!("'{tag_name}'"))

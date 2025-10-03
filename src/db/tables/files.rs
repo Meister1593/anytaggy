@@ -25,31 +25,31 @@ impl Database {
     }
     pub fn untag_file(&mut self, file: &File, tag_names: &[String]) -> Result<()> {
         let tx = self.connection.transaction()?;
-        let mut db_tag_ids = vec![];
 
+        let Some(file_id) = get_file_id(&tx, &file.fingerprint_hash)? else {
+            bail!("Could not find such file in database");
+        };
+        debug!("found file_id {file_id}");
+
+        let mut unreferenced_tags_count = 0;
+        let file_tag_ids = get_file_tag_ids_by_id(&tx, file_id)?;
         for tag_name in tag_names {
             let Some(tag) = get_tag_by_name(&tx, tag_name)? else {
                 bail!("Could not find such tag in database: {tag_name}");
             };
             debug!("found tag_id {}", tag.id);
 
-            db_tag_ids.push(tag);
-        }
-        let Some(file_id) = get_file_id(&tx, &file.fingerprint_hash)? else {
-            bail!("Could not find such file in database");
-        };
-        debug!("found file_id {file_id}");
-
-        let file_tag_ids = get_file_tag_ids_by_id(&tx, file_id)?;
-        for tag in &db_tag_ids {
             if file_tag_ids.contains(&tag.id) {
                 unreference_file_tag(&tx, file_id, tag.id)?;
+                unreferenced_tags_count += 1;
             } else {
                 bail!("File did not have such tag: {}", tag.name);
             }
         }
 
-        if file_tag_ids.len() == db_tag_ids.len() {
+        // if we deleted all tags from file
+        if file_tag_ids.len() == unreferenced_tags_count {
+            // delete the file from database as unnecessary
             delete_file(&tx, file_id)?;
         }
 
@@ -111,24 +111,10 @@ pub fn get_file_id(conn: &Connection, fingerprint_hash: &str) -> Result<Option<i
         .optional()?)
 }
 
-pub fn get_all_files_path(conn: &Connection) -> Result<Vec<String>> {
+fn get_all_files_path(conn: &Connection) -> Result<Vec<String>> {
     let mut query = conn.prepare(
         "SELECT path 
             FROM files",
-    )?;
-
-    Ok(query
-        .query_map([], |row| row.get(0))?
-        .filter_map(Result::ok)
-        .collect())
-}
-
-pub fn get_all_file_ids_without_tags(conn: &Connection) -> Result<Vec<i32>> {
-    let mut query = conn.prepare(
-        "SELECT f.id 
-            FROM files f
-                LEFT JOIN file_tags ft ON f.id = ft.file_id
-            WHERE ft.file_id IS NULL",
     )?;
 
     Ok(query
