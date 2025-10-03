@@ -13,7 +13,7 @@ use std::{
 };
 use tracing::debug;
 
-pub fn get_file_contents_hash(file_path: &Path) -> Result<String> {
+pub(super) fn get_file_contents_hash(file_path: &Path) -> Result<String> {
     let mut hasher = sha2::Sha256::new();
     let mut file = File::open(file_path)?;
     io::copy(&mut file, &mut hasher)?;
@@ -22,7 +22,10 @@ pub fn get_file_contents_hash(file_path: &Path) -> Result<String> {
     Ok(format!("{result:x}"))
 }
 
-pub fn get_fingerprint_hash(file_contents_hash: &str, file_path_string: &str) -> Result<String> {
+pub(super) fn get_fingerprint_hash(
+    file_contents_hash: &str,
+    file_path_string: &str,
+) -> Result<String> {
     let mut hasher = sha2::Sha256::new();
     let new_hash = format!("{file_contents_hash}_{file_path_string}");
     hasher.write_all(new_hash.as_bytes())?;
