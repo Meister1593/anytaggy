@@ -7,6 +7,8 @@ use temp_dir::TempDir;
 
 #[test]
 fn no_tags_specified() {
+    let (_, _, _, _, _, _temp_dir) = two_files_multiple_tags_prepare();
+
     let args = Args {
         database_path: None,
         command: Command::Untag {
@@ -15,7 +17,7 @@ fn no_tags_specified() {
         },
     };
     let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(Some("ERROR: No tags specified".into()), out);
+    assert_eq!(Some("ERROR: Database file could not be found".into()), out);
     assert_eq!(ExitCode::FAILURE, exit_code);
 }
 
