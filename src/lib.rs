@@ -187,10 +187,9 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
             }
         }
     };
-    match result {
-        Ok(out) => Ok((out, ExitCode::SUCCESS)),
-        Err(err) => Ok((Some(err.to_string()), ExitCode::FAILURE)),
-    }
+    result
+        .map(|out| (out, ExitCode::SUCCESS))
+        .or_else(|err| Ok((Some(err.to_string()), ExitCode::FAILURE)))
 }
 
 fn check_file_paths_for_subdirectory(parent: &Path, child: &Path) -> anyhow::Result<bool> {

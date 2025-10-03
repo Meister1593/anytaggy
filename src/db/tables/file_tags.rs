@@ -32,13 +32,11 @@ pub fn get_file_tags_by_hash(conn: &Connection, fingerprint_hash: &str) -> Resul
             INNER JOIN files ON file_tags.file_id = files.id
         WHERE files.fingerprint_hash = ?1",
     )?;
-    let file_tag_names = statement.query_map([&fingerprint_hash], |row| row.get(0))?;
-    let mut tags: Vec<String> = Vec::new();
-    for tag_name in file_tag_names {
-        tags.push(tag_name?);
-    }
 
-    Ok(tags)
+    Ok(statement
+        .query_map([&fingerprint_hash], |row| row.get(0))?
+        .filter_map(Result::ok)
+        .collect())
 }
 
 pub fn get_file_tag_ids_by_id(conn: &Connection, file_id: i32) -> Result<Vec<i32>> {
@@ -49,13 +47,10 @@ pub fn get_file_tag_ids_by_id(conn: &Connection, file_id: i32) -> Result<Vec<i32
             INNER JOIN files ON file_tags.file_id = files.id
         WHERE files.id = ?1",
     )?;
-    let file_tags = statement.query_map([&file_id], |row| row.get(0))?;
-    let mut tag_ids: Vec<i32> = Vec::new();
-    for tag_id in file_tags {
-        tag_ids.push(tag_id?);
-    }
-
-    Ok(tag_ids)
+    Ok(statement
+        .query_map([&file_id], |row| row.get(0))?
+        .filter_map(Result::ok)
+        .collect())
 }
 
 pub fn get_file_paths_by_tags_and_op(
@@ -83,11 +78,8 @@ pub fn get_file_paths_by_tags_and_op(
         tag_names.len()
     );
     let mut statement = conn.prepare(&query)?;
-    let file_tags = statement.query_map([], |row| row.get(0))?;
-    let mut paths: Vec<String> = Vec::new();
-    for path in file_tags {
-        paths.push(path?);
-    }
-
-    Ok(paths)
+    Ok(statement
+        .query_map([], |row| row.get(0))?
+        .filter_map(Result::ok)
+        .collect())
 }

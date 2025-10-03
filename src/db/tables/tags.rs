@@ -40,12 +40,11 @@ pub fn create_tag(tx: &Transaction, name: &str) -> Result<DbTag> {
 
 pub fn get_tag_names(conn: &Connection) -> Result<Vec<String>> {
     let mut query = conn.prepare("SELECT name FROM tags")?;
-    let mut tag_names: Vec<String> = Vec::new();
-    for tag_name in query.query_map([], |row| row.get(0))? {
-        tag_names.push(tag_name?);
-    }
 
-    Ok(tag_names)
+    Ok(query
+        .query_map([], |row| row.get(0))?
+        .filter_map(Result::ok)
+        .collect())
 }
 
 pub fn get_tag_id_by_name(conn: &Connection, name: &str) -> Result<Option<i32>> {
