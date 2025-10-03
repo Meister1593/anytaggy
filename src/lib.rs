@@ -130,11 +130,7 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
                 ));
             }
 
-            let result = commands::tag::tag_file(&mut db, &file_path, &tags);
-            match result {
-                Ok(()) => Ok(None),
-                Err(err) => Err(err),
-            }
+            commands::tag::tag_file(&mut db, &file_path, &tags).map(|()| None)
         }
         Command::Untag { file_path, tags } => {
             if tags.is_empty() {
@@ -150,11 +146,7 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
                 ));
             }
 
-            let result = commands::untag::untag_file(&mut db, &file_path, &tags);
-            match result {
-                Ok(()) => Ok(None),
-                Err(err) => Err(err),
-            }
+            commands::untag::untag_file(&mut db, &file_path, &tags).map(|()| None)
         }
         Command::Tags { file_path } => {
             let db = Database::new(&DatabaseMode::Read, &database_path);
@@ -179,11 +171,7 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
 
             let mut db = Database::new(&DatabaseMode::ReadWrite, &database_path);
 
-            let result = commands::rm_tags::rm_tags(&mut db, &tags);
-            match result {
-                Ok(()) => Ok(None),
-                Err(err) => Err(err),
-            }
+            commands::rm_tags::rm_tags(&mut db, &tags).map(|()| None)
         }
         Command::Files { tags } => {
             let db = Database::new(&DatabaseMode::Read, &database_path);
