@@ -1,3 +1,4 @@
+#![warn(clippy::pedantic)]
 use std::process::ExitCode;
 
 use anytaggy::{Args, entrypoint};
