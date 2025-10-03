@@ -17,6 +17,7 @@ clap = { version = "4.5", features = ["derive", "string"] }
 sha2 = "0.10"
 rusqlite = { version = "0.37.0", features = ["bundled"] }
 rusqlite_migration = "2.3.0"
+lets_find_up = "0.0.4"
 
 [dev-dependencies]
 rand = "0.9"

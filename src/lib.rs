@@ -9,7 +9,7 @@ use std::{
     path::{Path, PathBuf},
     process::ExitCode,
 };
-use tracing::debug;
+use tracing::{debug, error};
 
 pub const DATABASE_FILENAME: &str = ".anytaggy.db";
 
@@ -67,26 +67,14 @@ pub enum Command {
     },
 }
 
-fn search_database_in_parent_folders(
-    initial_path: &Path,
-) -> std::option::Option<std::path::PathBuf> {
-    debug!("initial search path: {}", initial_path.display());
-    let mut database_path = initial_path.to_path_buf();
-    // Traverse through parents until root
-    while !database_path.exists() {
-        // If currently looking path exists
-        if let Some(parent) = database_path.parent()
-            && let Some(parent_dir) = parent.parent()
-        // (and it is a directory)
-        {
-            // Append to that path database filename, check on next iteration for existence
-            database_path = parent_dir.join(DATABASE_FILENAME);
-        } else {
-            return None;
+fn search_database_in_parent_folders() -> Option<PathBuf> {
+    match lets_find_up::find_up(DATABASE_FILENAME) {
+        Ok(res) => res,
+        Err(e) => {
+            error!("{e:?}");
+            None
         }
-        debug!("parent: {}", database_path.display());
     }
-    Some(database_path)
 }
 
 #[allow(clippy::missing_errors_doc)]
@@ -110,22 +98,19 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
         }
 
         database_path
+    } else if let Some(database_path) = search_database_in_parent_folders() {
+        database_path
     } else {
-        let initial_database_path = std::env::current_dir()?.join(DATABASE_FILENAME);
-        if let Some(database_path) = search_database_in_parent_folders(&initial_database_path) {
-            database_path
+        // If it's a root and we still couldn't find database, check if it's a tag subcommand
+        if is_tag_subcommand {
+            // If it is, then assume initial path to be the right one (new database will be created)
+            std::env::current_dir()?.join(DATABASE_FILENAME)
         } else {
-            // If it's a root and we still couldn't find database, check if it's a tag subcommand
-            if is_tag_subcommand {
-                // If it is, then assume initial path to be the right one (new database will be created)
-                initial_database_path
-            } else {
-                // If it's not found and database will not be created - error out
-                return Ok((
-                    Some("ERROR: Database file could not be found".into()),
-                    ExitCode::FAILURE,
-                ));
-            }
+            // If it's not found and database will not be created - error out
+            return Ok((
+                Some("ERROR: Database file could not be found".into()),
+                ExitCode::FAILURE,
+            ));
         }
     };
     debug!("database_path: {}", database_path.display());

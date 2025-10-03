@@ -73,6 +73,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "lets_find_up",
  "rand",
  "rusqlite",
  "rusqlite_migration",
@@ -262,6 +263,12 @@ name = "lazy_static"
 version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
+
+[[package]]
+name = "lets_find_up"
+version = "0.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e8052b3d5cfa8bae8af3b44aae11a43e9fa48ce0ae477c4a39733a8deff34059"
 
 [[package]]
 name = "libc"
