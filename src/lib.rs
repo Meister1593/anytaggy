@@ -92,7 +92,7 @@ pub fn entrypoint(args: Args) -> Result<Option<String>, AppError> {
     let database_path = if let Some(database_path) = args.database_path {
         // If database path was specified, and it is not a tag subcommand (can't create new database)
         // Then error out as user error
-        if !database_path.exists() && !is_tag_subcommand {
+        if !database_path.is_file() && !is_tag_subcommand {
             return Err(AppError::DatabaseNotFound);
         }
 
@@ -110,13 +110,18 @@ pub fn entrypoint(args: Args) -> Result<Option<String>, AppError> {
     };
     debug!("database_path: {}", database_path.display());
 
+    let mode = match args.command {
+        Command::Tag { .. } => DatabaseMode::ReadWriteCreate,
+        Command::Untag { .. } | Command::RmTags { .. } => DatabaseMode::ReadWrite,
+        Command::Tags { .. } | Command::Files { .. } => DatabaseMode::Read,
+    };
+    let mut db = Database::new(&mode, &database_path);
+
     match args.command {
         Command::Tag { file_path, tags } => {
             if tags.is_empty() {
                 return Err(AppError::NoTagsSpecified);
             }
-
-            let mut db = Database::new(&DatabaseMode::ReadWriteCreate, &database_path);
 
             if !check_file_paths_for_subdirectory(&database_path, &file_path)? {
                 return Err(AppError::FileOutsideStructure);
@@ -134,8 +139,6 @@ pub fn entrypoint(args: Args) -> Result<Option<String>, AppError> {
                 return Err(AppError::NoTagsSpecified);
             }
 
-            let mut db = Database::new(&DatabaseMode::ReadWrite, &database_path);
-
             if !check_file_paths_for_subdirectory(&database_path, &file_path)? {
                 return Err(AppError::FileOutsideStructure);
             }
@@ -148,8 +151,6 @@ pub fn entrypoint(args: Args) -> Result<Option<String>, AppError> {
             .map(|()| None)
         }
         Command::Tags { file_path } => {
-            let db = Database::new(&DatabaseMode::Read, &database_path);
-
             if let Some(file_path) = file_path {
                 if !check_file_paths_for_subdirectory(&database_path, &file_path)? {
                     return Err(AppError::FileOutsideStructure);
@@ -165,8 +166,6 @@ pub fn entrypoint(args: Args) -> Result<Option<String>, AppError> {
                 return Err(AppError::NoTagsSpecified);
             }
 
-            let mut db = Database::new(&DatabaseMode::ReadWrite, &database_path);
-
             commands::rm_tags::rm_tags(
                 &mut db,
                 &tags.iter().map(String::as_str).collect::<Vec<_>>(),
@@ -174,8 +173,6 @@ pub fn entrypoint(args: Args) -> Result<Option<String>, AppError> {
             .map(|()| None)
         }
         Command::Files { tags } => {
-            let db = Database::new(&DatabaseMode::Read, &database_path);
-
             if let Some(tags) = tags {
                 if tags.is_empty() {
                     Err(AppError::NoTagsSpecified)
