@@ -11,6 +11,8 @@ pub const DATABASE_FILENAME: &str = ".anytaggy.db";
 
 #[derive(Debug, Error)]
 pub enum AppError {
+    #[error("Couldn't check file path for existence under database path")]
+    CouldntCheckForPathUnderDatabase,
     #[error("Specified database file could not be found")]
     DatabaseNotFound,
     #[error("Couldn't retrieve file name from path")]
@@ -190,6 +192,10 @@ pub fn entrypoint(args: Args) -> Result<Option<String>, AppError> {
 }
 
 fn check_file_paths_for_subdirectory(parent: &Path, child: &Path) -> Result<bool, AppError> {
+    if !parent.exists() || !child.exists() {
+        return Err(AppError::CouldntCheckForPathUnderDatabase); // todo: test
+    }
+
     let parent = parent.canonicalize()?;
     debug!("parent_cannonical_path: {}", parent.display());
 
