@@ -17,7 +17,7 @@ pub(in crate::db) struct DbTag {
 }
 
 impl Database {
-    pub fn tag_file(&mut self, file: &File, tag_names: &[String]) -> Result<()> {
+    pub fn tag_file(&mut self, file: &File, tag_names: &[&str]) -> Result<()> {
         let tx = self.connection.transaction()?;
 
         let file_id = get_file_id(&tx, &file.fingerprint_hash)?
@@ -51,7 +51,7 @@ impl Database {
         get_tag_names(&self.connection)
     }
 
-    pub fn delete_tags(&mut self, names: &[String]) -> Result<()> {
+    pub fn delete_tags(&mut self, names: &[&str]) -> Result<()> {
         let tx = self.connection.transaction()?;
         for name in names {
             let Some(tag) = get_tag_by_name(&tx, name)? else {
@@ -80,6 +80,7 @@ pub fn get_tag_by_name(conn: &Connection, name: &str) -> Result<Option<DbTag>> {
         })
         .optional()?)
 }
+
 fn delete_tag(tx: &Transaction, id: i32) -> Result<()> {
     tx.execute(
         "DELETE FROM tags

@@ -23,7 +23,7 @@ impl Database {
     pub fn get_files(&self) -> Result<Vec<String>> {
         get_all_files_path(&self.connection)
     }
-    pub fn untag_file(&mut self, file: &File, tag_names: &[String]) -> Result<()> {
+    pub fn untag_file(&mut self, file: &File, tag_names: &[&str]) -> Result<()> {
         let tx = self.connection.transaction()?;
 
         let Some(file_id) = get_file_id(&tx, &file.fingerprint_hash)? else {

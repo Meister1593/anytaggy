@@ -118,7 +118,12 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
                 ));
             }
 
-            commands::tag::tag_file(&mut db, &file_path, &tags).map(|()| None)
+            commands::tag::tag_file(
+                &mut db,
+                &file_path,
+                &tags.iter().map(String::as_str).collect::<Vec<_>>(),
+            )
+            .map(|()| None)
         }
         Command::Untag { file_path, tags } => {
             if tags.is_empty() {
@@ -134,7 +139,12 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
                 ));
             }
 
-            commands::untag::untag_file(&mut db, &file_path, &tags).map(|()| None)
+            commands::untag::untag_file(
+                &mut db,
+                &file_path,
+                &tags.iter().map(String::as_str).collect::<Vec<_>>(),
+            )
+            .map(|()| None)
         }
         Command::Tags { file_path } => {
             let db = Database::new(&DatabaseMode::Read, &database_path);
@@ -159,7 +169,11 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
 
             let mut db = Database::new(&DatabaseMode::ReadWrite, &database_path);
 
-            commands::rm_tags::rm_tags(&mut db, &tags).map(|()| None)
+            commands::rm_tags::rm_tags(
+                &mut db,
+                &tags.iter().map(String::as_str).collect::<Vec<_>>(),
+            )
+            .map(|()| None)
         }
         Command::Files { tags } => {
             let db = Database::new(&DatabaseMode::Read, &database_path);
@@ -168,13 +182,17 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
                 if tags.is_empty() {
                     Err(anyhow!("ERROR: No tags specified"))
                 } else {
-                    commands::files::get_file_paths(&db, &tags)
+                    commands::files::get_file_paths(
+                        &db,
+                        &tags.iter().map(String::as_str).collect::<Vec<_>>(),
+                    )
                 }
             } else {
                 commands::files::get_files(&db)
             }
         }
     };
+
     result
         .map(|out| (out, ExitCode::SUCCESS))
         .or_else(|err| Ok((Some(err.to_string()), ExitCode::FAILURE)))

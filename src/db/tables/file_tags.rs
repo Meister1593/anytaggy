@@ -8,7 +8,7 @@ impl Database {
         get_file_tags_by_hash(&self.connection, fingerprint_hash)
     }
 
-    pub fn get_files_by_tag(&self, tag_names: &[String]) -> Result<Vec<String>> {
+    pub fn get_files_by_tag(&self, tag_names: &[&str]) -> Result<Vec<String>> {
         get_file_paths_by_tags_and_op(&self.connection, tag_names)
     }
 }
@@ -64,7 +64,7 @@ pub fn get_file_tag_ids_by_id(conn: &Connection, file_id: i32) -> Result<Vec<i32
         .collect())
 }
 
-fn get_file_paths_by_tags_and_op(conn: &Connection, tag_names: &[String]) -> Result<Vec<String>> {
+fn get_file_paths_by_tags_and_op(conn: &Connection, tag_names: &[&str]) -> Result<Vec<String>> {
     let tag_names: Vec<String> = tag_names
         .iter()
         .map(|tag_name| format!("'{tag_name}'"))
