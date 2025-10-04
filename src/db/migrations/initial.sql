@@ -15,7 +15,9 @@ CREATE TABLE tags (
 CREATE INDEX idx_tags_name ON tags (name);
 
 CREATE TABLE file_tags (
+    -- todo: questionable cascade
     file_id INTEGER REFERENCES files (id) ON DELETE CASCADE,
+    -- todo: questionable cascade
     tag_id INTEGER REFERENCES tags (id) ON DELETE CASCADE,
     UNIQUE (file_id, tag_id)
 );
