@@ -38,7 +38,7 @@ pub(super) fn get_fingerprint_hash(
 pub(super) fn prepare_file_arg(file_path: &Path) -> Result<crate::db::File, AppError> {
     let name = file_path
         .file_name()
-        .ok_or(AppError::CantGetFileNameFromPath)?
+        .ok_or(AppError::NoFileNameFromPath)?
         .display()
         .to_string();
     debug!("name: {name}");
