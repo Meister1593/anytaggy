@@ -19,7 +19,7 @@ fn main() -> std::process::ExitCode {
             ExitCode::SUCCESS
         }
         Err(err) => {
-            println!("{err}");
+            println!("ERROR: {err}");
 
             ExitCode::FAILURE
         }

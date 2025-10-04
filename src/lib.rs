@@ -11,17 +11,17 @@ pub const DATABASE_FILENAME: &str = ".anytaggy.db";
 
 #[derive(Debug, Error)]
 pub enum AppError {
-    #[error("ERROR: Specified database file could not be found")]
+    #[error("Specified database file could not be found")]
     DatabaseNotFound,
-    #[error("ERROR: Couldn't retrieve file name from path")]
+    #[error("Couldn't retrieve file name from path")]
     CantGetFileNameFromPath,
-    #[error("ERROR: No tags specified")]
+    #[error("No tags specified")]
     NoTagsSpecified,
-    #[error("ERROR: Could not access file outside of database structure")]
+    #[error("Could not access file outside of database structure")]
     FileOutsideStructure,
-    #[error("ERROR: Database error: {0}")]
+    #[error("Database error: {0}")]
     Database(#[from] db::DatabaseError),
-    #[error("ERROR: {0}")]
+    #[error("Unhandled error: {0}")]
     Unhandled(#[from] std::io::Error),
 }
 

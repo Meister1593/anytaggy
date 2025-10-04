@@ -24,7 +24,7 @@ pub enum DatabaseError {
     NoSuchTag(String),
     #[error("File did not have such tag: {0}")]
     NoSuchTagOnFile(String),
-    #[error("Internal database error: {0}")]
+    #[error("Unhandled database error: {0}")]
     DatabaseInternal(#[from] rusqlite::Error),
 }
 
