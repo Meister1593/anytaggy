@@ -1,11 +1,10 @@
 use crate::db::{
-    Database, File,
+    Database, DatabaseError, File,
     tables::{
         file_tags::{get_file_tag_ids_by_id, unreference_file_tag},
         tags::get_tag_by_name,
     },
 };
-use anyhow::{Result, bail};
 use rusqlite::{Connection, OptionalExtension, Transaction};
 use tracing::debug;
 
@@ -20,14 +19,14 @@ pub(in crate::db) struct DbFile {
 }
 
 impl Database {
-    pub fn get_files(&self) -> Result<Vec<String>> {
-        get_all_files_path(&self.connection)
+    pub fn get_files(&self) -> Result<Vec<String>, DatabaseError> {
+        get_all_files_path(&self.connection).map_err(DatabaseError::DatabaseInternal)
     }
-    pub fn untag_file(&mut self, file: &File, tag_names: &[&str]) -> Result<()> {
+    pub fn untag_file(&mut self, file: &File, tag_names: &[&str]) -> Result<(), DatabaseError> {
         let tx = self.connection.transaction()?;
 
         let Some(file_id) = get_file_id(&tx, &file.fingerprint_hash)? else {
-            bail!("Could not find such file in database");
+            return Err(DatabaseError::NoSuchFile);
         };
         debug!("found file_id {file_id}");
 
@@ -35,7 +34,7 @@ impl Database {
         let file_tag_ids = get_file_tag_ids_by_id(&tx, file_id)?;
         for tag_name in tag_names {
             let Some(tag) = get_tag_by_name(&tx, tag_name)? else {
-                bail!("Could not find such tag in database: {tag_name}");
+                return Err(DatabaseError::NoSuchTag((*tag_name).into()));
             };
             debug!("found tag_id {}", tag.id);
 
@@ -43,7 +42,7 @@ impl Database {
                 unreference_file_tag(&tx, file_id, tag.id)?;
                 unreferenced_tags_count += 1;
             } else {
-                bail!("File did not have such tag: {}", tag.name);
+                return Err(DatabaseError::NoSuchTagOnFile(tag.name));
             }
         }
 
@@ -59,7 +58,7 @@ impl Database {
     }
 }
 
-pub fn delete_file(tx: &Transaction, id: i32) -> Result<()> {
+pub fn delete_file(tx: &Transaction, id: i32) -> Result<(), rusqlite::Error> {
     tx.execute(
         "DELETE FROM files
              WHERE id = ?1",
@@ -70,7 +69,7 @@ pub fn delete_file(tx: &Transaction, id: i32) -> Result<()> {
     Ok(())
 }
 
-pub fn create_file(tx: &Transaction, file: &File) -> Result<DbFile> {
+pub fn create_file(tx: &Transaction, file: &File) -> Result<DbFile, rusqlite::Error> {
     let mut insert = tx.prepare(
         "INSERT INTO files (path, name, contents_hash, fingerprint_hash) 
              VALUES (?1, ?2, ?3, ?4) 
@@ -99,19 +98,22 @@ pub fn create_file(tx: &Transaction, file: &File) -> Result<DbFile> {
     Ok(db_file)
 }
 
-pub fn get_file_id(conn: &Connection, fingerprint_hash: &str) -> Result<Option<i32>> {
+pub fn get_file_id(
+    conn: &Connection,
+    fingerprint_hash: &str,
+) -> Result<Option<i32>, rusqlite::Error> {
     let mut select = conn.prepare(
         "SELECT id 
             FROM files 
             WHERE fingerprint_hash = ?1",
     )?;
 
-    Ok(select
+    select
         .query_one([&fingerprint_hash], |row| row.get(0))
-        .optional()?)
+        .optional()
 }
 
-fn get_all_files_path(conn: &Connection) -> Result<Vec<String>> {
+fn get_all_files_path(conn: &Connection) -> Result<Vec<String>, rusqlite::Error> {
     let mut query = conn.prepare(
         "SELECT path 
             FROM files",

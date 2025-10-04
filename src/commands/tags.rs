@@ -1,9 +1,8 @@
-use crate::db::Database;
-use anyhow::Result;
+use crate::{AppError, db::Database};
 use std::path::Path;
 use tracing::debug;
 
-pub fn get_file_tags(db: &Database, file_path: &Path) -> Result<Option<String>> {
+pub fn get_file_tags(db: &Database, file_path: &Path) -> Result<Option<String>, AppError> {
     debug!("file_path: {}", file_path.display());
 
     let contents_hash = super::get_file_contents_hash(file_path)?;
@@ -23,7 +22,7 @@ pub fn get_file_tags(db: &Database, file_path: &Path) -> Result<Option<String>> 
     }
 }
 
-pub fn get_all_tags(db: &Database) -> Result<Option<String>> {
+pub fn get_all_tags(db: &Database) -> Result<Option<String>, AppError> {
     let file_tags = db.get_all_tags()?;
     debug!("file_tags: {file_tags:?}");
 

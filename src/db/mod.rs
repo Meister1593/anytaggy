@@ -3,6 +3,7 @@ mod tables;
 use rusqlite::{Connection, OpenFlags};
 use rusqlite_migration::{M, Migrations};
 use std::path::Path;
+use thiserror::Error;
 
 const MIGRATIONS_SLICE: &[M] = &[M::up(include_str!("migrations/initial.sql"))];
 const MIGRATIONS: Migrations = Migrations::from_slice(MIGRATIONS_SLICE);
@@ -13,6 +14,18 @@ pub struct File {
     pub name: String,
     pub contents_hash: String,
     pub fingerprint_hash: String,
+}
+
+#[derive(Debug, Error)]
+pub enum DatabaseError {
+    #[error("Could not find such file in database")]
+    NoSuchFile,
+    #[error("Could not find such tag in database: {0}")]
+    NoSuchTag(String),
+    #[error("File did not have such tag: {0}")]
+    NoSuchTagOnFile(String),
+    #[error("Internal database error: {0}")]
+    DatabaseInternal(#[from] rusqlite::Error),
 }
 
 pub enum DatabaseMode {

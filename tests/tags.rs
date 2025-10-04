@@ -1,7 +1,6 @@
 mod common;
 
-use anytaggy::{Args, Command, entrypoint};
-use std::process::ExitCode;
+use anytaggy::{AppError, Args, Command, entrypoint};
 use temp_dir::TempDir;
 
 use crate::common::{create_random_file, two_files_multiple_tags_prepare};
@@ -14,9 +13,8 @@ fn no_tags_database() {
         database_path: None,
         command: Command::Tags { file_path: None },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(Some("ERROR: Database file could not be found".into()), out);
-    assert_eq!(ExitCode::FAILURE, exit_code);
+    let out = entrypoint(args);
+    assert!(matches!(out, Err(AppError::DatabaseNotFound)));
 }
 
 #[test]
@@ -31,9 +29,8 @@ fn get_tags() {
             tags: test_tags.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -41,9 +38,8 @@ fn get_tags() {
             file_path: Some(tag_file.clone()),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(Some(test_tags.join(",")), out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
 #[test]
@@ -58,33 +54,29 @@ fn get_all_tags() {
             tags: test_tags.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
         command: Command::Tags { file_path: None },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(Some(test_tags.join(",")), out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
         command: Command::RmTags { tags: test_tags },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
         command: Command::Tags { file_path: None },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
 #[test]
@@ -104,9 +96,8 @@ fn tags_file_in_parent_directory_without_db() {
             tags: vec!["test".into()],
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -114,10 +105,6 @@ fn tags_file_in_parent_directory_without_db() {
             file_path: Some(tag_file_1.clone()),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(
-        Some("ERROR: Could not access file outside of database structure".into()),
-        out
-    );
-    assert_eq!(ExitCode::FAILURE, exit_code);
+    let out = entrypoint(args);
+    assert!(matches!(out, Err(AppError::FileOutsideStructure)));
 }

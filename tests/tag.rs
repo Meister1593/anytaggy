@@ -1,10 +1,8 @@
 mod common;
 
-use anytaggy::{Args, Command, entrypoint};
-use std::process::ExitCode;
-use temp_dir::TempDir;
-
 use crate::common::{create_random_file, two_files_multiple_tags_prepare};
+use anytaggy::{AppError, Args, Command, entrypoint};
+use temp_dir::TempDir;
 
 #[test]
 fn no_tag_tags() {
@@ -17,9 +15,8 @@ fn no_tag_tags() {
             tags: test_tags.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -28,9 +25,8 @@ fn no_tag_tags() {
             tags: vec![],
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(Some("ERROR: No tags specified".into()), out);
-    assert_eq!(ExitCode::FAILURE, exit_code);
+    let out = entrypoint(args);
+    assert!(matches!(out, Err(AppError::NoTagsSpecified)));
 }
 
 #[test]
@@ -46,9 +42,8 @@ fn tag_file() {
             tags: test_tags.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -57,9 +52,8 @@ fn tag_file() {
             tags: test_tags_1.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -67,12 +61,11 @@ fn tag_file() {
             file_path: Some(tag_file),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     // this needed just to not have duplicates
     let mut out_tags = [test_tags, test_tags_1].concat();
     out_tags.dedup();
     assert_eq!(Some(out_tags.join(",")), out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
 #[test]
@@ -91,10 +84,6 @@ fn tag_file_in_parent_directory_without_db() {
             tags: vec!["test".into()],
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(
-        Some("ERROR: Could not access file outside of database structure".into()),
-        out
-    );
-    assert_eq!(ExitCode::FAILURE, exit_code);
+    let out = entrypoint(args);
+    assert!(matches!(out, Err(AppError::FileOutsideStructure)));
 }

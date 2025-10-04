@@ -1,8 +1,8 @@
 mod common;
 
 use crate::common::create_random_file;
-use anytaggy::{Args, Command, DATABASE_FILENAME, entrypoint};
-use std::{fs::create_dir, path::PathBuf, process::ExitCode};
+use anytaggy::{AppError, Args, Command, DATABASE_FILENAME, entrypoint};
+use std::{fs::create_dir, path::PathBuf};
 use temp_dir::TempDir;
 
 #[test]
@@ -24,18 +24,16 @@ fn create_and_find_database_in_parent() {
             tags: test_tags,
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     std::env::set_current_dir(subfolder).unwrap();
     let args = Args {
         database_path: None,
         command: Command::Tags { file_path: None },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(Some("test".into()), out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
 #[test]
@@ -54,17 +52,15 @@ fn create_and_find_database_in_current_dir() {
             tags: test_tags,
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: None,
         command: Command::Tags { file_path: None },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(Some("test".into()), out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
 #[test]
@@ -76,10 +72,6 @@ fn dont_find_database() {
         database_path: Some(PathBuf::default()),
         command: Command::Tags { file_path: None },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(
-        Some("ERROR: Specified database file could not be found".into()),
-        out
-    );
-    assert_eq!(ExitCode::FAILURE, exit_code);
+    let out = entrypoint(args);
+    assert!(matches!(out, Err(AppError::DatabaseNotFound)));
 }

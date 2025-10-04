@@ -1,8 +1,8 @@
 mod common;
 
 use crate::common::{create_random_file, two_files_multiple_tags_prepare};
-use anytaggy::{Args, Command, entrypoint};
-use std::{path::PathBuf, process::ExitCode};
+use anytaggy::{AppError, Args, Command, db::DatabaseError, entrypoint};
+use std::path::PathBuf;
 use temp_dir::TempDir;
 
 #[test]
@@ -16,9 +16,8 @@ fn no_tags_specified() {
             tags: vec![],
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(Some("ERROR: Database file could not be found".into()), out);
-    assert_eq!(ExitCode::FAILURE, exit_code);
+    let out = entrypoint(args);
+    assert!(matches!(out, Err(AppError::DatabaseNotFound)));
 }
 
 #[test]
@@ -32,9 +31,8 @@ fn no_tag_tags() {
             tags: test_tags.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -43,9 +41,8 @@ fn no_tag_tags() {
             tags: vec![],
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(Some("ERROR: No tags specified".into()), out);
-    assert_eq!(ExitCode::FAILURE, exit_code);
+    let out = entrypoint(args);
+    assert!(matches!(out, Err(AppError::NoTagsSpecified)));
 }
 
 #[test]
@@ -60,9 +57,8 @@ fn untag_file() {
             tags: test_tags.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -70,9 +66,8 @@ fn untag_file() {
             file_path: Some(tag_file.clone()),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(Some(test_tags.join(",")), out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let random_tag_name = "random_tag".to_string();
     let args = Args {
@@ -82,14 +77,11 @@ fn untag_file() {
             tags: vec![random_tag_name.clone()],
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(
-        Some(format!(
-            "Could not find such tag in database: {random_tag_name}"
-        )),
-        out
-    );
-    assert_eq!(ExitCode::FAILURE, exit_code);
+    let out = entrypoint(args);
+    assert!(matches!(
+        out,
+        Err(AppError::Database(DatabaseError::NoSuchTag(_))) // todo: check name for tag, matches checks for pattern - not structure
+    ));
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -98,9 +90,8 @@ fn untag_file() {
             tags: test_tags.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -108,9 +99,8 @@ fn untag_file() {
             file_path: Some(tag_file.clone()),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
 #[test]
@@ -125,9 +115,8 @@ fn files_clean_after_delete_untag() {
             tags: test_tags.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -135,9 +124,8 @@ fn files_clean_after_delete_untag() {
             file_path: Some(tag_file.clone()),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(Some(test_tags.join(",")), out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -146,9 +134,8 @@ fn files_clean_after_delete_untag() {
             tags: test_tags.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -156,9 +143,8 @@ fn files_clean_after_delete_untag() {
             tags: Some(test_tags.clone()),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
 #[test]
@@ -174,9 +160,8 @@ fn no_such_file() {
             tags: test_tags.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -185,9 +170,11 @@ fn no_such_file() {
             tags: test_tags.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(Some("Could not find such file in database".into()), out);
-    assert_eq!(ExitCode::FAILURE, exit_code);
+    let out = entrypoint(args);
+    assert!(matches!(
+        out,
+        Err(AppError::Database(DatabaseError::NoSuchFile))
+    ));
 }
 
 #[test]
@@ -203,9 +190,8 @@ fn no_such_tag_on_file() {
             tags: test_tags.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -214,9 +200,8 @@ fn no_such_tag_on_file() {
             tags: test_tags_2.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -225,9 +210,11 @@ fn no_such_tag_on_file() {
             tags: test_tags_2.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
-    assert!(out.unwrap().starts_with("File did not have such tag: "));
-    assert_eq!(ExitCode::FAILURE, exit_code);
+    let out = entrypoint(args);
+    assert!(matches!(
+        out,
+        Err(AppError::Database(DatabaseError::NoSuchTagOnFile(_)))
+    )); // todo: check name for tag, matches checks for pattern - not structure
 }
 
 #[test]
@@ -247,9 +234,8 @@ fn untag_file_in_parent_directory_without_db() {
             tags: vec!["test".into()],
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -258,10 +244,6 @@ fn untag_file_in_parent_directory_without_db() {
             tags: vec!["test".into()],
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(
-        Some("ERROR: Could not access file outside of database structure".into()),
-        out
-    );
-    assert_eq!(ExitCode::FAILURE, exit_code);
+    let out = entrypoint(args);
+    assert!(matches!(out, Err(AppError::FileOutsideStructure)));
 }

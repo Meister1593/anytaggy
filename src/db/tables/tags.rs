@@ -1,11 +1,10 @@
 use crate::db::{
-    Database, File,
+    Database, DatabaseError, File,
     tables::{
         file_tags::{get_file_tag_ids_by_id, reference_file_tag},
         files::{create_file, get_file_id},
     },
 };
-use anyhow::{Result, bail};
 use rusqlite::{Connection, OptionalExtension, Transaction};
 use tracing::{debug, info};
 
@@ -17,7 +16,7 @@ pub(in crate::db) struct DbTag {
 }
 
 impl Database {
-    pub fn tag_file(&mut self, file: &File, tag_names: &[&str]) -> Result<()> {
+    pub fn tag_file(&mut self, file: &File, tag_names: &[&str]) -> Result<(), DatabaseError> {
         let tx = self.connection.transaction()?;
 
         let file_id = get_file_id(&tx, &file.fingerprint_hash)?
@@ -47,15 +46,15 @@ impl Database {
         Ok(())
     }
 
-    pub fn get_all_tags(&self) -> Result<Vec<String>> {
+    pub fn get_all_tags(&self) -> Result<Vec<String>, DatabaseError> {
         get_tag_names(&self.connection)
     }
 
-    pub fn delete_tags(&mut self, names: &[&str]) -> Result<()> {
+    pub fn delete_tags(&mut self, names: &[&str]) -> Result<(), DatabaseError> {
         let tx = self.connection.transaction()?;
         for name in names {
             let Some(tag) = get_tag_by_name(&tx, name)? else {
-                bail!("Could not find such tag in database: {name}");
+                return Err(DatabaseError::NoSuchTag(name.to_string()));
             };
             delete_tag(&tx, tag.id)?;
         }
@@ -65,7 +64,7 @@ impl Database {
     }
 }
 
-pub fn get_tag_by_name(conn: &Connection, name: &str) -> Result<Option<DbTag>> {
+pub fn get_tag_by_name(conn: &Connection, name: &str) -> Result<Option<DbTag>, DatabaseError> {
     let mut query = conn.prepare(
         "SELECT * FROM tags 
              WHERE name = ?1",
@@ -81,7 +80,7 @@ pub fn get_tag_by_name(conn: &Connection, name: &str) -> Result<Option<DbTag>> {
         .optional()?)
 }
 
-fn delete_tag(tx: &Transaction, id: i32) -> Result<()> {
+fn delete_tag(tx: &Transaction, id: i32) -> Result<(), DatabaseError> {
     tx.execute(
         "DELETE FROM tags
              WHERE id = ?1",
@@ -92,7 +91,7 @@ fn delete_tag(tx: &Transaction, id: i32) -> Result<()> {
     Ok(())
 }
 
-fn create_tag(tx: &Transaction, name: &str) -> Result<DbTag> {
+fn create_tag(tx: &Transaction, name: &str) -> Result<DbTag, DatabaseError> {
     let mut insert = tx.prepare(
         "INSERT INTO tags (name) 
              VALUES (?1) 
@@ -110,7 +109,7 @@ fn create_tag(tx: &Transaction, name: &str) -> Result<DbTag> {
     Ok(db_tag)
 }
 
-fn get_tag_names(conn: &Connection) -> Result<Vec<String>> {
+fn get_tag_names(conn: &Connection) -> Result<Vec<String>, DatabaseError> {
     let mut query = conn.prepare("SELECT name FROM tags")?;
 
     Ok(query
@@ -119,7 +118,7 @@ fn get_tag_names(conn: &Connection) -> Result<Vec<String>> {
         .collect())
 }
 
-fn get_tag_id_by_name(conn: &Connection, name: &str) -> Result<Option<i32>> {
+fn get_tag_id_by_name(conn: &Connection, name: &str) -> Result<Option<i32>, DatabaseError> {
     let mut query = conn.prepare(
         "SELECT id FROM tags 
              WHERE name = ?1",

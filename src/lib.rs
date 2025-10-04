@@ -1,16 +1,29 @@
 mod commands;
-mod db;
+pub mod db;
 
 use crate::db::{Database, DatabaseMode};
-use anyhow::anyhow;
 use clap::{Parser, Subcommand, builder::NonEmptyStringValueParser};
-use std::{
-    path::{Path, PathBuf},
-    process::ExitCode,
-};
+use std::path::{Path, PathBuf};
+use thiserror::Error;
 use tracing::{debug, error};
 
 pub const DATABASE_FILENAME: &str = ".anytaggy.db";
+
+#[derive(Debug, Error)]
+pub enum AppError {
+    #[error("ERROR: Specified database file could not be found")]
+    DatabaseNotFound,
+    #[error("ERROR: Couldn't retrieve file name from path")]
+    CantGetFileNameFromPath,
+    #[error("ERROR: No tags specified")]
+    NoTagsSpecified,
+    #[error("ERROR: Could not access file outside of database structure")]
+    FileOutsideStructure,
+    #[error("ERROR: Database error: {0}")]
+    Database(#[from] db::DatabaseError),
+    #[error("ERROR: {0}")]
+    Unhandled(#[from] std::io::Error),
+}
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -68,7 +81,7 @@ pub enum Command {
 
 #[allow(clippy::missing_errors_doc)]
 #[allow(clippy::too_many_lines)]
-pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
+pub fn entrypoint(args: Args) -> Result<Option<String>, AppError> {
     let is_tag_subcommand = matches!(
         args.command,
         Command::Tag {
@@ -80,10 +93,7 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
         // If database path was specified, and it is not a tag subcommand (can't create new database)
         // Then error out as user error
         if !database_path.exists() && !is_tag_subcommand {
-            return Ok((
-                Some("ERROR: Specified database file could not be found".into()),
-                ExitCode::FAILURE,
-            ));
+            return Err(AppError::DatabaseNotFound);
         }
 
         database_path
@@ -96,26 +106,20 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
         std::env::current_dir()?.join(DATABASE_FILENAME)
     } else {
         // If it's not found and database will not be created - error out
-        return Ok((
-            Some("ERROR: Database file could not be found".into()),
-            ExitCode::FAILURE,
-        ));
+        return Err(AppError::DatabaseNotFound);
     };
     debug!("database_path: {}", database_path.display());
 
-    let result = match args.command {
+    match args.command {
         Command::Tag { file_path, tags } => {
             if tags.is_empty() {
-                return Ok((Some("ERROR: No tags specified".into()), ExitCode::FAILURE));
+                return Err(AppError::NoTagsSpecified);
             }
 
             let mut db = Database::new(&DatabaseMode::ReadWriteCreate, &database_path);
 
             if !check_file_paths_for_subdirectory(&database_path, &file_path)? {
-                return Ok((
-                    Some("ERROR: Could not access file outside of database structure".into()),
-                    ExitCode::FAILURE,
-                ));
+                return Err(AppError::FileOutsideStructure);
             }
 
             commands::tag::tag_file(
@@ -127,16 +131,13 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
         }
         Command::Untag { file_path, tags } => {
             if tags.is_empty() {
-                return Ok((Some("ERROR: No tags specified".into()), ExitCode::FAILURE));
+                return Err(AppError::NoTagsSpecified);
             }
 
             let mut db = Database::new(&DatabaseMode::ReadWrite, &database_path);
 
             if !check_file_paths_for_subdirectory(&database_path, &file_path)? {
-                return Ok((
-                    Some("ERROR: Could not access file outside of database structure".into()),
-                    ExitCode::FAILURE,
-                ));
+                return Err(AppError::FileOutsideStructure);
             }
 
             commands::untag::untag_file(
@@ -151,10 +152,7 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
 
             if let Some(file_path) = file_path {
                 if !check_file_paths_for_subdirectory(&database_path, &file_path)? {
-                    return Ok((
-                        Some("ERROR: Could not access file outside of database structure".into()),
-                        ExitCode::FAILURE,
-                    ));
+                    return Err(AppError::FileOutsideStructure);
                 }
 
                 commands::tags::get_file_tags(&db, &file_path)
@@ -164,7 +162,7 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
         }
         Command::RmTags { tags } => {
             if tags.is_empty() {
-                return Ok((Some("ERROR: No tags specified".into()), ExitCode::FAILURE));
+                return Err(AppError::NoTagsSpecified);
             }
 
             let mut db = Database::new(&DatabaseMode::ReadWrite, &database_path);
@@ -180,7 +178,7 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
 
             if let Some(tags) = tags {
                 if tags.is_empty() {
-                    Err(anyhow!("ERROR: No tags specified"))
+                    Err(AppError::NoTagsSpecified)
                 } else {
                     commands::files::get_file_paths(
                         &db,
@@ -191,24 +189,20 @@ pub fn entrypoint(args: Args) -> anyhow::Result<(Option<String>, ExitCode)> {
                 commands::files::get_files(&db)
             }
         }
-    };
-
-    result
-        .map(|out| (out, ExitCode::SUCCESS))
-        .or_else(|err| Ok((Some(err.to_string()), ExitCode::FAILURE)))
+    }
 }
 
-fn check_file_paths_for_subdirectory(parent: &Path, child: &Path) -> anyhow::Result<bool> {
+fn check_file_paths_for_subdirectory(parent: &Path, child: &Path) -> Result<bool, AppError> {
     let parent = parent.canonicalize()?;
     debug!("parent_cannonical_path: {}", parent.display());
 
-    let parent = parent.parent().expect("Could not get parent path");
-    debug!("parent_path: {}", parent.display());
+    let parent_dir = parent.parent().ok_or(AppError::DatabaseNotFound)?;
+    debug!("parent_path: {}", parent_dir.display());
 
     let child = child.canonicalize()?;
     debug!("child_cannonical_path: {}", child.display());
 
-    Ok(child.starts_with(parent))
+    Ok(child.starts_with(parent_dir))
 }
 
 fn search_database_in_parent_folders() -> Option<PathBuf> {

@@ -1,8 +1,7 @@
-use crate::db::Database;
-use anyhow::Result;
+use crate::{AppError, db::Database};
 use std::path::Path;
 
-pub fn untag_file(db: &mut Database, file_path: &Path, tag_names: &[&str]) -> Result<()> {
+pub fn untag_file(db: &mut Database, file_path: &Path, tag_names: &[&str]) -> Result<(), AppError> {
     let file = super::prepare_file_arg(file_path)?;
     db.untag_file(&file, tag_names)?;
 

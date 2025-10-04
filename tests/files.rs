@@ -1,8 +1,7 @@
 mod common;
 
 use crate::common::two_files_multiple_tags_prepare;
-use anytaggy::{Args, Command, entrypoint};
-use std::process::ExitCode;
+use anytaggy::{AppError, Args, Command, entrypoint};
 
 #[test]
 fn no_files_database() {
@@ -12,9 +11,8 @@ fn no_files_database() {
         database_path: None,
         command: Command::Files { tags: None },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(Some("ERROR: Database file could not be found".into()), out);
-    assert_eq!(ExitCode::FAILURE, exit_code);
+    let out = entrypoint(args);
+    assert!(matches!(out, Err(AppError::DatabaseNotFound)));
 }
 
 #[test]
@@ -30,9 +28,9 @@ fn files_joined_tag() {
             tags: test_tags_1.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
+
     let args = Args {
         database_path: Some(db_path.clone()),
         command: Command::Tag {
@@ -40,9 +38,8 @@ fn files_joined_tag() {
             tags: test_tags_2.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -50,7 +47,7 @@ fn files_joined_tag() {
             tags: Some(vec!["test3".into()]),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(
         Some(format!(
             "{}\n{}",
@@ -59,7 +56,6 @@ fn files_joined_tag() {
         )),
         out
     );
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
 #[test]
@@ -75,9 +71,9 @@ fn files_left_tag() {
             tags: test_tags_1.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
+
     let args = Args {
         database_path: Some(db_path.clone()),
         command: Command::Tag {
@@ -85,9 +81,8 @@ fn files_left_tag() {
             tags: test_tags_2.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -95,9 +90,8 @@ fn files_left_tag() {
             tags: Some(vec!["test".into(), "test2".into()]),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(Some(tag_file_1.display().to_string()), out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
 #[test]
@@ -113,9 +107,9 @@ fn files_right_tag() {
             tags: test_tags_1.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
+
     let args = Args {
         database_path: Some(db_path.clone()),
         command: Command::Tag {
@@ -123,9 +117,8 @@ fn files_right_tag() {
             tags: test_tags_2.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -133,9 +126,8 @@ fn files_right_tag() {
             tags: Some(vec!["test4".into()]),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(Some(tag_file_2.display().to_string()), out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
 #[test]
@@ -151,9 +143,9 @@ fn files_neither_tag() {
             tags: test_tags_1.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
+
     let args = Args {
         database_path: Some(db_path.clone()),
         command: Command::Tag {
@@ -161,9 +153,8 @@ fn files_neither_tag() {
             tags: test_tags_2.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -171,9 +162,8 @@ fn files_neither_tag() {
             tags: Some([&test_tags_1[..], &test_tags_2[..]].concat().clone()),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
 #[test]
@@ -189,9 +179,9 @@ fn get_files() {
             tags: test_tags_1.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
+
     let args = Args {
         database_path: Some(db_path.clone()),
         command: Command::Tag {
@@ -199,15 +189,14 @@ fn get_files() {
             tags: test_tags_2.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
         command: Command::Files { tags: None },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(
         Some(format!(
             "{}\n{}",
@@ -216,7 +205,6 @@ fn get_files() {
         )),
         out
     );
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
@@ -225,9 +213,9 @@ fn get_files() {
             tags: test_tags_1.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
+
     let args = Args {
         database_path: Some(db_path.clone()),
         command: Command::Untag {
@@ -235,16 +223,15 @@ fn get_files() {
             tags: test_tags_2.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
+
     let args = Args {
         database_path: Some(db_path.clone()),
         command: Command::Files { tags: None },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 }
 
 #[test]
@@ -259,15 +246,13 @@ fn no_tags_specified() {
             tags: test_tags_1.clone(),
         },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
+    let out = entrypoint(args).unwrap();
     assert_eq!(None, out);
-    assert_eq!(ExitCode::SUCCESS, exit_code);
 
     let args = Args {
         database_path: Some(db_path.clone()),
         command: Command::Files { tags: Some(vec![]) },
     };
-    let (out, exit_code) = entrypoint(args).unwrap();
-    assert_eq!(Some("ERROR: No tags specified".into()), out);
-    assert_eq!(ExitCode::FAILURE, exit_code);
+    let out = entrypoint(args);
+    assert!(matches!(out, Err(AppError::NoTagsSpecified)));
 }
