@@ -10,16 +10,15 @@ opt-level = "z"
 panic = "abort"
 
 [dependencies]
+thiserror = "2.0.17"
 tracing = "0.1.41"
-tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 clap = { version = "4.5", features = ["derive", "string"] }
+lets_find_up = "0.0.4"
 sha2 = "0.10"
 rusqlite = { version = "0.37.0", features = ["bundled"] }
 rusqlite_migration = "2.3.0"
-lets_find_up = "0.0.4"
-thiserror = "2.0.17"
 
 [dev-dependencies]
 rand = "0.9"
 temp-dir = "0.1.16"
-assert_matches = "1.5"
