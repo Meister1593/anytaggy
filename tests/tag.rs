@@ -87,3 +87,20 @@ fn tag_file_in_parent_directory_without_db() {
     let out = entrypoint(args);
     assert!(matches!(out, Err(AppError::FileOutsideStructure)));
 }
+
+#[test]
+fn tag_nonexistent_file() {
+    let (db_path, _, _, _, _, temp_dir) = two_files_multiple_tags_prepare();
+
+    let nonexistent_file = temp_dir.path().join("nonexistent_file.txt");
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Tag {
+            file_path: nonexistent_file,
+            tags: vec!["test".into()],
+        },
+    };
+    let out = entrypoint(args);
+    assert!(matches!(out, Err(AppError::FileNotFound)));
+}

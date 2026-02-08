@@ -48,23 +48,21 @@ impl Database {
     }
 
     // todo: the only place where unwrap is used, is it fine?
-    pub fn new(database_mode: &DatabaseMode, database_path: &Path) -> Self {
+    pub fn new(database_mode: &DatabaseMode, database_path: &Path) -> Result<Self, DatabaseError> {
         let connection = match database_mode {
-            DatabaseMode::ReadWriteCreate => Connection::open(database_path).unwrap(),
+            DatabaseMode::ReadWriteCreate => Connection::open(database_path)?,
             DatabaseMode::ReadWrite => Connection::open_with_flags(
                 database_path,
                 OpenFlags::SQLITE_OPEN_READ_WRITE
                     | OpenFlags::SQLITE_OPEN_NO_MUTEX
                     | OpenFlags::SQLITE_OPEN_URI,
-            )
-            .unwrap(),
+            )?,
             DatabaseMode::Read => Connection::open_with_flags(
                 database_path,
                 OpenFlags::SQLITE_OPEN_READ_ONLY
                     | OpenFlags::SQLITE_OPEN_NO_MUTEX
                     | OpenFlags::SQLITE_OPEN_URI,
-            )
-            .unwrap(),
+            )?,
         };
         match database_mode {
             DatabaseMode::ReadWrite | DatabaseMode::ReadWriteCreate => {
@@ -72,9 +70,9 @@ impl Database {
                 let mut db = Self { connection };
                 db.apply_runtime_options();
                 db.apply_migrations();
-                db
+                Ok(db)
             }
-            DatabaseMode::Read => Self { connection },
+            DatabaseMode::Read => Ok(Self { connection }),
         }
     }
 }

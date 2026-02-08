@@ -247,3 +247,32 @@ fn untag_file_in_parent_directory_without_db() {
     let out = entrypoint(args);
     assert!(matches!(out, Err(AppError::FileOutsideStructure)));
 }
+
+#[test]
+fn untag_nonexistent_file() {
+    let (db_path, file, _, test_tags, _, temp_dir) = two_files_multiple_tags_prepare();
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Tag {
+            file_path: file.clone(),
+            tags: vec!["test".into()],
+        },
+    };
+    let out = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+
+    // Create a path that definitely doesn't exist
+    let nonexistent_file = temp_dir.path().join("nonexistent_file.txt");
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Untag {
+            file_path: nonexistent_file,
+            tags: test_tags.clone(),
+        },
+    };
+    let out = entrypoint(args);
+
+    assert!(matches!(out, Err(AppError::FileNotFound)));
+}

@@ -21,6 +21,8 @@ pub enum AppError {
     NoTagsSpecified,
     #[error("Could not access file outside of database structure")]
     FileOutsideStructure,
+    #[error("Could not find specified file")]
+    FileNotFound,
     #[error("Database error: {0}")]
     Database(#[from] db::DatabaseError),
     #[error("Unhandled error: {0}")]
@@ -117,10 +119,14 @@ pub fn entrypoint(args: Args) -> Result<Option<String>, AppError> {
         Command::Untag { .. } | Command::RmTags { .. } => DatabaseMode::ReadWrite,
         Command::Tags { .. } | Command::Files { .. } => DatabaseMode::Read,
     };
-    let mut db = Database::new(&mode, &database_path);
+    let mut db = Database::new(&mode, &database_path)?;
 
     match args.command {
         Command::Tag { file_path, tags } => {
+            if !file_path.exists() {
+                return Err(AppError::FileNotFound);
+            }
+
             if tags.is_empty() {
                 return Err(AppError::NoTagsSpecified);
             }
@@ -137,6 +143,10 @@ pub fn entrypoint(args: Args) -> Result<Option<String>, AppError> {
             .map(|()| None)
         }
         Command::Untag { file_path, tags } => {
+            if !file_path.exists() {
+                return Err(AppError::FileNotFound);
+            }
+
             if tags.is_empty() {
                 return Err(AppError::NoTagsSpecified);
             }
@@ -154,6 +164,10 @@ pub fn entrypoint(args: Args) -> Result<Option<String>, AppError> {
         }
         Command::Tags { file_path } => {
             if let Some(file_path) = file_path {
+                if !file_path.exists() {
+                    return Err(AppError::FileNotFound);
+                }
+
                 if !check_file_paths_for_subdirectory(&database_path, &file_path)? {
                     return Err(AppError::FileOutsideStructure);
                 }
@@ -193,13 +207,16 @@ pub fn entrypoint(args: Args) -> Result<Option<String>, AppError> {
 
 fn check_file_paths_for_subdirectory(parent: &Path, child: &Path) -> Result<bool, AppError> {
     if !parent.exists() || !child.exists() {
-        return Err(AppError::FileIsNotUnderDatabase); // todo: test
+        return Ok(false); // Files don't exist, so they can't be subdirectories
     }
 
     let parent = parent.canonicalize()?;
     debug!("parent_cannonical_path: {}", parent.display());
 
-    let parent_dir = parent.parent().ok_or(AppError::DatabaseNotFound)?;
+    let parent_dir = match parent.parent() {
+        Some(dir) => dir,
+        None => return Ok(false), // At filesystem root, no parent directory
+    };
     debug!("parent_path: {}", parent_dir.display());
 
     let child = child.canonicalize()?;
