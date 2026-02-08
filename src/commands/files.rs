@@ -1,7 +1,7 @@
 use crate::{AppError, db::Database};
 
 pub fn get_file_paths(db: &Database, tag_names: &[&str]) -> Result<Option<String>, AppError> {
-    let files = db.get_files_by_tag(tag_names)?;
+    let files = db.get_files_by_tags(tag_names)?;
     if files.is_empty() {
         Ok(None)
     } else {

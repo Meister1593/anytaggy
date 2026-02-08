@@ -3,12 +3,15 @@ use rusqlite::{Connection, Transaction};
 use tracing::debug;
 
 impl Database {
-    pub fn get_file_tags(&self, fingerprint_hash: &str) -> Result<Vec<String>, DatabaseError> {
+    pub fn get_file_tags_by_hash(
+        &self,
+        fingerprint_hash: &str,
+    ) -> Result<Vec<String>, DatabaseError> {
         get_file_tags_by_hash(&self.connection, fingerprint_hash)
     }
 
-    pub fn get_files_by_tag(&self, tag_names: &[&str]) -> Result<Vec<String>, DatabaseError> {
-        get_file_paths_by_tags_and_op(&self.connection, tag_names)
+    pub fn get_files_by_tags(&self, tag_names: &[&str]) -> Result<Vec<String>, DatabaseError> {
+        get_file_paths_by_tags(&self.connection, tag_names)
     }
 }
 
@@ -74,7 +77,7 @@ pub fn get_file_tag_ids_by_id(conn: &Connection, file_id: i32) -> Result<Vec<i32
         .collect())
 }
 
-fn get_file_paths_by_tags_and_op(
+fn get_file_paths_by_tags(
     conn: &Connection,
     tag_names: &[&str],
 ) -> Result<Vec<String>, DatabaseError> {

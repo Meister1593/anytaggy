@@ -12,7 +12,7 @@ pub fn get_file_tags(db: &Database, file_path: &Path) -> Result<Option<String>, 
         super::get_fingerprint_hash(&contents_hash, &file_path.display().to_string())?;
     debug!("fingerprint_hash: {fingerprint_hash}");
 
-    let file_tags = db.get_file_tags(&fingerprint_hash)?;
+    let file_tags = db.get_file_tags_by_hash(&fingerprint_hash)?;
     debug!("file_tags: {file_tags:?}");
 
     if file_tags.is_empty() {
