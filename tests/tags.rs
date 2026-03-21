@@ -21,6 +21,32 @@ fn no_tags_database() {
 
 #[test]
 #[serial]
+fn no_files() {
+    // Test data
+    let (db_path, tag_file, _, test_tags, _, _temp_dir) = two_files_multiple_tags_prepare();
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Tag {
+            file_path: tag_file.clone(),
+            tags: test_tags.clone(),
+        },
+    };
+    let out = entrypoint(args).unwrap();
+    assert_eq!(None, out);
+
+    let args = Args {
+        database_path: Some(db_path.clone()),
+        command: Command::Tags {
+            file_path: Some(_temp_dir.path().join("unknown")),
+        },
+    };
+    let out = entrypoint(args);
+    assert!(matches!(out, Err(AppError::FileNotFound)));
+}
+
+#[test]
+#[serial]
 fn get_tags() {
     // Test data
     let (db_path, tag_file, _, test_tags, _, _temp_dir) = two_files_multiple_tags_prepare();
