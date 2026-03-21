@@ -2,10 +2,12 @@ mod common;
 
 use crate::common::create_random_file;
 use anytaggy::{AppError, Args, Command, DATABASE_FILENAME, entrypoint};
+use serial_test::serial;
 use std::{fs::create_dir, path::PathBuf};
 use temp_dir::TempDir;
 
 #[test]
+#[serial]
 fn create_and_find_database_in_parent() {
     // Test data
     let temp_dir = TempDir::new().unwrap();
@@ -37,6 +39,7 @@ fn create_and_find_database_in_parent() {
 }
 
 #[test]
+#[serial]
 fn create_and_find_database_in_current_dir() {
     // Test data
     let temp_dir = TempDir::new().unwrap();
@@ -64,6 +67,7 @@ fn create_and_find_database_in_current_dir() {
 }
 
 #[test]
+#[serial]
 fn dont_find_database() {
     let temp_dir = TempDir::new().unwrap();
     std::env::set_current_dir(temp_dir.path()).unwrap();

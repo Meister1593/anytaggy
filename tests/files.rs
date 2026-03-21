@@ -2,8 +2,10 @@ mod common;
 
 use crate::common::two_files_multiple_tags_prepare;
 use anytaggy::{AppError, Args, Command, entrypoint};
+use serial_test::serial;
 
 #[test]
+#[serial]
 fn no_files_database() {
     let (_, _, _, _, _, _temp_dir) = two_files_multiple_tags_prepare();
 
@@ -16,6 +18,7 @@ fn no_files_database() {
 }
 
 #[test]
+#[serial]
 fn files_joined_tag() {
     // Test data
     let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2, _temp_dir) =
@@ -59,6 +62,7 @@ fn files_joined_tag() {
 }
 
 #[test]
+#[serial]
 fn files_left_tag() {
     // Test data
     let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2, _temp_dir) =
@@ -95,6 +99,7 @@ fn files_left_tag() {
 }
 
 #[test]
+#[serial]
 fn files_right_tag() {
     // Test data
     let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2, _temp_dir) =
@@ -131,6 +136,7 @@ fn files_right_tag() {
 }
 
 #[test]
+#[serial]
 fn files_neither_tag() {
     // Test data
     let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2, _temp_dir) =
@@ -167,6 +173,7 @@ fn files_neither_tag() {
 }
 
 #[test]
+#[serial]
 fn get_files() {
     // Test data
     let (db_path, tag_file_1, tag_file_2, test_tags_1, test_tags_2, _temp_dir) =
@@ -235,6 +242,7 @@ fn get_files() {
 }
 
 #[test]
+#[serial]
 fn no_tags_specified() {
     // Test data
     let (db_path, tag_file_1, _, test_tags_1, _, _temp_dir) = two_files_multiple_tags_prepare();

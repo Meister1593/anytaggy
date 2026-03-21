@@ -2,8 +2,10 @@ mod common;
 
 use crate::common::two_files_multiple_tags_prepare;
 use anytaggy::{AppError, Args, Command, db::DatabaseError, entrypoint};
+use serial_test::serial;
 
 #[test]
+#[serial]
 fn no_rm_tags_database() {
     let (_, _, _, _, _, _temp_dir) = two_files_multiple_tags_prepare();
 
@@ -16,6 +18,7 @@ fn no_rm_tags_database() {
 }
 
 #[test]
+#[serial]
 fn no_rm_tags_tags() {
     let (db_path, tag_file, _, test_tags, _, _temp_dir) = two_files_multiple_tags_prepare();
 
@@ -38,6 +41,7 @@ fn no_rm_tags_tags() {
 }
 
 #[test]
+#[serial]
 fn rm_tags() {
     let (db_path, tag_file, _, test_tags, _, _temp_dir) = two_files_multiple_tags_prepare();
 
@@ -89,6 +93,7 @@ fn rm_tags() {
 }
 
 #[test]
+#[serial]
 fn no_such_tag() {
     let (db_path, tag_file, _, test_tags, _, _temp_dir) = two_files_multiple_tags_prepare();
 

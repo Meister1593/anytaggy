@@ -2,10 +2,12 @@ mod common;
 
 use crate::common::{create_random_file, two_files_multiple_tags_prepare};
 use anytaggy::{AppError, Args, Command, db::DatabaseError, entrypoint};
+use serial_test::serial;
 use std::path::PathBuf;
 use temp_dir::TempDir;
 
 #[test]
+#[serial]
 fn no_tags_specified() {
     let (_, _, _, _, _, _temp_dir) = two_files_multiple_tags_prepare();
 
@@ -21,6 +23,7 @@ fn no_tags_specified() {
 }
 
 #[test]
+#[serial]
 fn no_tag_tags() {
     let (db_path, tag_file, _, test_tags, _, _temp_dir) = two_files_multiple_tags_prepare();
 
@@ -46,6 +49,7 @@ fn no_tag_tags() {
 }
 
 #[test]
+#[serial]
 fn untag_file() {
     // Test data
     let (db_path, tag_file, _, test_tags, _, _temp_dir) = two_files_multiple_tags_prepare();
@@ -104,6 +108,7 @@ fn untag_file() {
 }
 
 #[test]
+#[serial]
 fn files_clean_after_delete_untag() {
     // Test data
     let (db_path, tag_file, _, test_tags, _, _temp_dir) = two_files_multiple_tags_prepare();
@@ -148,6 +153,7 @@ fn files_clean_after_delete_untag() {
 }
 
 #[test]
+#[serial]
 fn no_such_file() {
     // Test data
     let (db_path, tag_file, tag_file_2, test_tags, _, _temp_dir) =
@@ -178,6 +184,7 @@ fn no_such_file() {
 }
 
 #[test]
+#[serial]
 fn no_such_tag_on_file() {
     // Test data
     let (db_path, tag_file, tag_file_2, test_tags, test_tags_2, _temp_dir) =
@@ -218,6 +225,7 @@ fn no_such_tag_on_file() {
 }
 
 #[test]
+#[serial]
 fn untag_file_in_parent_directory_without_db() {
     let temp_dir = TempDir::new().unwrap();
     std::env::set_current_dir(temp_dir.path()).unwrap();
@@ -249,6 +257,7 @@ fn untag_file_in_parent_directory_without_db() {
 }
 
 #[test]
+#[serial]
 fn untag_nonexistent_file() {
     let (db_path, file, _, test_tags, _, temp_dir) = two_files_multiple_tags_prepare();
 

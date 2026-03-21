@@ -4,7 +4,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use rand::Rng;
+use rand::RngExt;
 use temp_dir::TempDir;
 
 pub fn create_random_file(dir_path: &Path, name: &str) -> PathBuf {
