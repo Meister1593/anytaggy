@@ -31,7 +31,9 @@ jobs:
       run: |
         cargo install cargo-nextest --locked
         cargo +stable install cargo-llvm-cov --locked
-    - name: Run tests
+    - name: Run cargo test
+      run: cargo test
+    - name: Run llvm-cov nextest
       run: cargo llvm-cov nextest
 
   build:
