@@ -1,7 +1,7 @@
 use crate::db::{
     Database, DatabaseError, File,
     tables::{
-        file_tags::{get_file_tag_ids_by_id, unreference_file_tag},
+        file_tags::{get_tag_ids_by_file_id, unreference_file_tag},
         tags::get_tag_by_name,
     },
 };
@@ -19,19 +19,19 @@ pub(in crate::db) struct DbFile {
 }
 
 impl Database {
-    pub fn get_files(&self) -> Result<Vec<String>, DatabaseError> {
-        get_all_files_path(&self.connection).map_err(DatabaseError::DatabaseInternal)
+    pub fn get_all_files_paths(&self) -> Result<Vec<String>, DatabaseError> {
+        get_all_files_paths(&self.connection).map_err(DatabaseError::DatabaseInternal)
     }
     pub fn untag_file(&mut self, file: &File, tag_names: &[&str]) -> Result<(), DatabaseError> {
         let tx = self.connection.transaction()?;
 
-        let Some(file_id) = get_file_id(&tx, &file.fingerprint_hash)? else {
+        let Some(file_id) = get_file_id_by_hash(&tx, &file.fingerprint_hash)? else {
             return Err(DatabaseError::NoSuchFile);
         };
         debug!("found file_id {file_id}");
 
         let mut unreferenced_tags_count = 0;
-        let file_tag_ids = get_file_tag_ids_by_id(&tx, file_id)?;
+        let file_tag_ids = get_tag_ids_by_file_id(&tx, file_id)?;
         for tag_name in tag_names {
             let Some(tag) = get_tag_by_name(&tx, tag_name)? else {
                 return Err(DatabaseError::NoSuchTag((*tag_name).into()));
@@ -98,7 +98,7 @@ pub fn create_file(tx: &Transaction, file: &File) -> Result<DbFile, rusqlite::Er
     Ok(db_file)
 }
 
-pub fn get_file_id(
+pub fn get_file_id_by_hash(
     conn: &Connection,
     fingerprint_hash: &str,
 ) -> Result<Option<i32>, rusqlite::Error> {
@@ -113,7 +113,7 @@ pub fn get_file_id(
         .optional()
 }
 
-fn get_all_files_path(conn: &Connection) -> Result<Vec<String>, rusqlite::Error> {
+fn get_all_files_paths(conn: &Connection) -> Result<Vec<String>, rusqlite::Error> {
     let mut query = conn.prepare(
         "SELECT path 
             FROM files",

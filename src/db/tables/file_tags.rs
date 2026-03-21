@@ -10,8 +10,11 @@ impl Database {
         get_file_tags_by_hash(&self.connection, fingerprint_hash)
     }
 
-    pub fn get_files_by_tags(&self, tag_names: &[&str]) -> Result<Vec<String>, DatabaseError> {
-        get_file_paths_by_tags(&self.connection, tag_names)
+    pub fn get_file_paths_by_tags_names(
+        &self,
+        tag_names: &[&str],
+    ) -> Result<Vec<String>, DatabaseError> {
+        get_file_paths_by_tags_names(&self.connection, tag_names)
     }
 }
 
@@ -63,7 +66,7 @@ fn get_file_tags_by_hash(
         .collect())
 }
 
-pub fn get_file_tag_ids_by_id(conn: &Connection, file_id: i32) -> Result<Vec<i32>, DatabaseError> {
+pub fn get_tag_ids_by_file_id(conn: &Connection, file_id: i32) -> Result<Vec<i32>, DatabaseError> {
     let mut statement = conn.prepare(
         "SELECT t.id 
         FROM tags t 
@@ -77,7 +80,7 @@ pub fn get_file_tag_ids_by_id(conn: &Connection, file_id: i32) -> Result<Vec<i32
         .collect())
 }
 
-fn get_file_paths_by_tags(
+fn get_file_paths_by_tags_names(
     conn: &Connection,
     tag_names: &[&str],
 ) -> Result<Vec<String>, DatabaseError> {

@@ -1,8 +1,8 @@
 use crate::db::{
     Database, DatabaseError, File,
     tables::{
-        file_tags::{get_file_tag_ids_by_id, reference_file_tag},
-        files::{create_file, get_file_id},
+        file_tags::{get_tag_ids_by_file_id, reference_file_tag},
+        files::{create_file, get_file_id_by_hash},
     },
 };
 use rusqlite::{Connection, OptionalExtension, Transaction};
@@ -19,11 +19,11 @@ impl Database {
     pub fn tag_file(&mut self, file: &File, tag_names: &[&str]) -> Result<(), DatabaseError> {
         let tx = self.connection.transaction()?;
 
-        let file_id = get_file_id(&tx, &file.fingerprint_hash)?
+        let file_id = get_file_id_by_hash(&tx, &file.fingerprint_hash)?
             .map_or_else(|| create_file(&tx, file).map(|f| f.id), Ok)?;
         debug!("file_id: {file_id}");
 
-        let file_tag_ids = get_file_tag_ids_by_id(&tx, file_id)?;
+        let file_tag_ids = get_tag_ids_by_file_id(&tx, file_id)?;
         for tag_name in tag_names {
             let tag_name = tag_name.trim();
             let tag_id = get_tag_id_by_name(&tx, tag_name)?.map_or_else(
@@ -46,8 +46,8 @@ impl Database {
         Ok(())
     }
 
-    pub fn get_all_tags(&self) -> Result<Vec<String>, DatabaseError> {
-        get_tag_names(&self.connection)
+    pub fn get_all_tag_names(&self) -> Result<Vec<String>, DatabaseError> {
+        get_all_tag_names(&self.connection)
     }
 
     pub fn delete_tags(&mut self, names: &[&str]) -> Result<(), DatabaseError> {
@@ -109,7 +109,7 @@ fn create_tag(tx: &Transaction, name: &str) -> Result<DbTag, DatabaseError> {
     Ok(db_tag)
 }
 
-fn get_tag_names(conn: &Connection) -> Result<Vec<String>, DatabaseError> {
+fn get_all_tag_names(conn: &Connection) -> Result<Vec<String>, DatabaseError> {
     let mut query = conn.prepare("SELECT name FROM tags")?;
 
     Ok(query

@@ -23,7 +23,7 @@ pub fn get_file_tags(db: &Database, file_path: &Path) -> Result<Option<String>, 
 }
 
 pub fn get_all_tags(db: &Database) -> Result<Option<String>, AppError> {
-    let file_tags = db.get_all_tags()?;
+    let file_tags = db.get_all_tag_names()?;
     debug!("file_tags: {file_tags:?}");
 
     if file_tags.is_empty() {
