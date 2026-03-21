@@ -85,19 +85,14 @@ fn get_file_paths_by_tags(
         .iter()
         .map(|tag_name| format!("'{tag_name}'"))
         .collect();
-    // adapted from: https://dba.stackexchange.com/questions/267559/how-to-filter-multiple-many-to-many-relationship-based-on-multiple-tags#
     let query = format!(
-        "
-        SELECT f.path
-        FROM files f
-        WHERE f.id IN (
-            SELECT ft.file_id
-            FROM file_tags ft
-                INNER JOIN tags t on ft.tag_id = t.id
-            WHERE t.name IN ({})
-            GROUP BY ft.file_id
-            HAVING COUNT(*) = {}
-            )",
+        "SELECT f.path
+         FROM files f
+             INNER JOIN file_tags ft on ft.file_id = f.id
+             INNER JOIN tags t on ft.tag_id = t.id
+         WHERE t.name IN ({})
+         GROUP BY f.id
+         HAVING COUNT(*) = {}",
         tag_names.join(","),
         tag_names.len()
     );
