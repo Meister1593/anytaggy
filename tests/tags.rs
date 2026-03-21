@@ -2,9 +2,8 @@ mod common;
 
 use anytaggy::{AppError, Args, Command, entrypoint};
 use serial_test::serial;
-use temp_dir::TempDir;
 
-use crate::common::{create_random_file, two_files_multiple_tags_prepare};
+use crate::common::{create_random_file, temp_dir_prepare, two_files_multiple_tags_prepare};
 
 #[test]
 #[serial]
@@ -112,8 +111,7 @@ fn get_all_tags() {
 #[test]
 #[serial]
 fn tags_file_in_parent_directory_without_db() {
-    let temp_dir = TempDir::new().unwrap();
-    std::env::set_current_dir(temp_dir.path()).unwrap();
+    let temp_dir = temp_dir_prepare();
     let db_parent_path = temp_dir.path().join("parent");
     std::fs::create_dir(&db_parent_path).unwrap();
     let db_path = &db_parent_path.join("tmp_db.db");

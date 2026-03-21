@@ -35,3 +35,11 @@ pub fn two_files_multiple_tags_prepare()
         temp_dir,
     )
 }
+
+#[allow(dead_code)]
+pub fn temp_dir_prepare() -> TempDir {
+    let temp_dir = TempDir::new().unwrap();
+    std::env::set_current_dir(temp_dir.path()).unwrap();
+
+    temp_dir
+}
