@@ -23,6 +23,10 @@ pub enum AppError {
     FileOutsideStructure,
     #[error("Could not find specified file")]
     FileNotFound,
+    #[error("Could not find parent folder of database")] // todo: is this even possible?
+    NoDatabaseParentFolder,
+    #[error("Repair file search error: {0}")]
+    RepairFileSearchError(#[from] walkdir::Error),
     #[error("Database error: {0}")]
     Database(#[from] db::DatabaseError),
     #[error("Unhandled error: {0}")]
@@ -204,7 +208,13 @@ pub fn entrypoint(args: Args) -> Result<Option<String>, AppError> {
                 commands::files::get_files(&db)
             }
         }
-        Command::Repair {} => commands::repair::repair(&mut db).map(|()| None),
+        Command::Repair {} => {
+            if let Some(search_path) = database_path.parent() {
+                commands::repair::repair(&mut db, search_path).map(|()| None)
+            } else {
+                Err(AppError::NoDatabaseParentFolder)
+            }
+        }
     }
 }
 

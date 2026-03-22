@@ -2,7 +2,7 @@ use crate::db::{
     Database, DatabaseError, File,
     tables::{
         file_tags::{get_tag_ids_by_file_id, reference_file_tag},
-        files::{create_file, get_file_id_by_hash},
+        files::{create_file, get_file_id_by_fingerprint_hash},
     },
 };
 use rusqlite::{Connection, OptionalExtension, Transaction};
@@ -19,7 +19,7 @@ impl Database {
     pub fn tag_file(&mut self, file: &File, tag_names: &[&str]) -> Result<(), DatabaseError> {
         let tx = self.connection.transaction()?;
 
-        let file_id = get_file_id_by_hash(&tx, &file.fingerprint_hash)?
+        let file_id = get_file_id_by_fingerprint_hash(&tx, &file.fingerprint_hash)?
             .map_or_else(|| create_file(&tx, file).map(|f| f.id), Ok)?;
         debug!("file_id: {file_id}");
 

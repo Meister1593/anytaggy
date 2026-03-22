@@ -16,6 +16,77 @@ pub struct File {
     pub fingerprint_hash: String,
 }
 
+#[allow(unused)]
+#[derive(Default, Debug)]
+pub struct DbFile {
+    pub id: i32,
+    pub path: String,
+    pub name: String,
+    pub contents_hash: String,
+    pub fingerprint_hash: String,
+}
+
+impl DbFile {
+    pub fn builder() -> DbFileBuilder {
+        DbFileBuilder::default()
+    }
+}
+
+#[derive(Default)]
+pub struct DbFileBuilder {
+    id: i32,
+    path: String,
+    name: String,
+    contents_hash: String,
+    fingerprint_hash: String,
+}
+impl DbFileBuilder {
+    pub fn new() -> DbFileBuilder {
+        DbFileBuilder {
+            id: -1,
+            path: String::new(),
+            name: String::new(),
+            contents_hash: String::new(),
+            fingerprint_hash: String::new(),
+        }
+    }
+
+    pub fn id(mut self, id: i32) -> DbFileBuilder {
+        self.id = id;
+        self
+    }
+
+    pub fn path(mut self, path: String) -> DbFileBuilder {
+        self.path = path;
+        self
+    }
+
+    pub fn name(mut self, name: String) -> DbFileBuilder {
+        self.name = name;
+        self
+    }
+
+    pub fn contents_hash(mut self, contents_hash: String) -> DbFileBuilder {
+        self.contents_hash = contents_hash;
+        self
+    }
+
+    pub fn fingerprint_hash(mut self, fingerprint_hash: String) -> DbFileBuilder {
+        self.fingerprint_hash = fingerprint_hash;
+        self
+    }
+
+    pub fn build(self) -> DbFile {
+        DbFile {
+            id: self.id,
+            path: self.path,
+            name: self.name,
+            contents_hash: self.contents_hash,
+            fingerprint_hash: self.fingerprint_hash,
+        }
+    }
+}
+
 #[derive(Debug, Error)]
 pub enum DatabaseError {
     #[error("Could not find such file in database")]
