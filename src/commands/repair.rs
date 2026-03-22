@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use tracing::{debug, info};
+use tracing::{debug, info, warn};
 use walkdir::WalkDir;
 
 use crate::{
@@ -16,12 +16,18 @@ pub fn repair(db: &mut Database, search_path: &Path) -> Result<(), AppError> {
         if entry.file_type().is_file() {
             let file = create_file_struct_from_path(&entry.into_path())?;
             if file.size == 0 {
+                warn!("File ({}) has zero size, cannot be compared.", file.path);
                 // we cannot compare empty files with different names, it's impossible
                 continue;
             }
 
-            let db_file = db.get_file_by_contents_hash(&file.contents_hash)?;
-            if let Some(db_file) = db_file {
+            let db_files = db.get_files_by_contents_hash(&file.contents_hash)?;
+            if db_files.len() >= 2 {
+                // we cannot compare multiple conflicting hashes
+                warn!("Hash collision: {:?}", db_files);
+                continue;
+            }
+            if let Some(db_file) = db_files.first() {
                 debug!("found match for db file by contents hash");
 
                 if file.fingerprint_hash.ne(&db_file.fingerprint_hash) {

@@ -17,10 +17,10 @@ impl Database {
         get_all_files(&self.connection).map_err(DatabaseError::DatabaseInternal)
     }
 
-    pub fn get_file_by_contents_hash(
+    pub fn get_files_by_contents_hash(
         &self,
         contents_hash: &str,
-    ) -> Result<Option<DbFile>, DatabaseError> {
+    ) -> Result<Vec<DbFile>, DatabaseError> {
         get_file_by_contents_hash(&self.connection, contents_hash)
             .map_err(DatabaseError::DatabaseInternal)
     }
@@ -187,15 +187,15 @@ pub fn get_file_id_by_fingerprint_hash(
 pub fn get_file_by_contents_hash(
     conn: &Connection,
     contents_hash: &str,
-) -> Result<Option<DbFile>, rusqlite::Error> {
-    let mut select = conn.prepare(
+) -> Result<Vec<DbFile>, rusqlite::Error> {
+    let mut query = conn.prepare(
         "SELECT id, name, path, contents_hash, fingerprint_hash
             FROM files 
             WHERE contents_hash = ?1",
     )?;
 
-    select
-        .query_one([&contents_hash], |row| {
+    Ok(query
+        .query_map([&contents_hash], |row| {
             Ok(DbFile::builder()
                 .id(row.get(0)?)
                 .path(row.get(1)?)
@@ -203,8 +203,9 @@ pub fn get_file_by_contents_hash(
                 .contents_hash(row.get(3)?)
                 .fingerprint_hash(row.get(4)?)
                 .build())
-        })
-        .optional()
+        })?
+        .filter_map(Result::ok)
+        .collect())
 }
 
 fn get_all_files_paths(conn: &Connection) -> Result<Vec<String>, rusqlite::Error> {
