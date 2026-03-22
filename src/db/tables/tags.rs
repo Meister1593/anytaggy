@@ -5,7 +5,7 @@ use crate::db::{
         files::{create_file, get_file_id_by_fingerprint_hash},
     },
 };
-use rusqlite::{Connection, OptionalExtension, Transaction};
+use rusqlite::{Connection, OptionalExtension};
 use tracing::{debug, info};
 
 #[allow(unused)]
@@ -80,8 +80,8 @@ pub fn get_tag_by_name(conn: &Connection, name: &str) -> Result<Option<DbTag>, D
         .optional()?)
 }
 
-fn delete_tag(tx: &Transaction, id: i32) -> Result<(), DatabaseError> {
-    tx.execute(
+fn delete_tag(conn: &Connection, id: i32) -> Result<(), DatabaseError> {
+    conn.execute(
         "DELETE FROM tags
              WHERE id = ?1",
         (id,),
@@ -91,8 +91,8 @@ fn delete_tag(tx: &Transaction, id: i32) -> Result<(), DatabaseError> {
     Ok(())
 }
 
-fn create_tag(tx: &Transaction, name: &str) -> Result<DbTag, DatabaseError> {
-    let mut insert = tx.prepare(
+fn create_tag(conn: &Connection, name: &str) -> Result<DbTag, DatabaseError> {
+    let mut insert = conn.prepare(
         "INSERT INTO tags (name) 
              VALUES (?1) 
              RETURNING id, name",

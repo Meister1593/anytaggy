@@ -1,5 +1,5 @@
 use crate::db::{Database, DatabaseError};
-use rusqlite::{Connection, Transaction};
+use rusqlite::Connection;
 use tracing::debug;
 
 impl Database {
@@ -19,11 +19,11 @@ impl Database {
 }
 
 pub fn unreference_file_tag(
-    tx: &Transaction,
+    conn: &Connection,
     file_id: i32,
     tag_id: i32,
 ) -> Result<(), DatabaseError> {
-    tx.execute(
+    conn.execute(
         "DELETE FROM file_tags
              WHERE file_id = ?1 AND tag_id = ?2",
         (file_id, tag_id),
@@ -34,11 +34,11 @@ pub fn unreference_file_tag(
 }
 
 pub fn reference_file_tag(
-    tx: &Transaction,
+    conn: &Connection,
     file_id: i32,
     tag_id: i32,
 ) -> Result<(), DatabaseError> {
-    tx.execute(
+    conn.execute(
         "INSERT INTO file_tags (file_id, tag_id) 
              VALUES (?1, ?2)",
         (file_id, tag_id),

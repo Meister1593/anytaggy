@@ -35,11 +35,11 @@ impl Database {
         Ok(())
     }
 
-    pub fn bulk_update(&mut self, files: Vec<DbFile>) -> Result<(), DatabaseError> {
+    pub fn bulk_update(&mut self, files: &[DbFile]) -> Result<(), DatabaseError> {
         let tx = self.connection.transaction()?;
 
         for file in files {
-            update_file(&tx, &file).map_err(DatabaseError::DatabaseInternal)?;
+            update_file(&tx, file).map_err(DatabaseError::DatabaseInternal)?;
         }
 
         tx.commit()?;
