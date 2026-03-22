@@ -1,4 +1,5 @@
 pub mod files;
+pub mod repair;
 pub mod rm_tags;
 pub mod tag;
 pub mod tags;
@@ -35,7 +36,7 @@ pub(super) fn get_fingerprint_hash(
     Ok(format!("{result:x}"))
 }
 
-pub(super) fn prepare_file_arg(file_path: &Path) -> Result<crate::db::File, AppError> {
+pub(super) fn create_file_struct_from_path(file_path: &Path) -> Result<crate::db::File, AppError> {
     let name = file_path
         .file_name()
         .ok_or(AppError::NoFileNameFromPath)?
@@ -49,6 +50,9 @@ pub(super) fn prepare_file_arg(file_path: &Path) -> Result<crate::db::File, AppE
     let contents_hash = get_file_contents_hash(file_path)?;
     debug!("contents_hash: {contents_hash}");
 
+    let size = format!("{}", file_path.metadata()?.len());
+    debug!("size: {size}");
+
     let fingerprint_hash = get_fingerprint_hash(&contents_hash, &path)?;
     debug!("fingerprint_hash: {fingerprint_hash}");
 
@@ -57,5 +61,6 @@ pub(super) fn prepare_file_arg(file_path: &Path) -> Result<crate::db::File, AppE
         name,
         contents_hash,
         fingerprint_hash,
+        size,
     })
 }

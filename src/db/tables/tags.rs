@@ -2,10 +2,10 @@ use crate::db::{
     Database, DatabaseError, File,
     tables::{
         file_tags::{get_tag_ids_by_file_id, reference_file_tag},
-        files::{create_file, get_file_id_by_hash},
+        files::{create_file, get_file_id_by_fingerprint_hash},
     },
 };
-use rusqlite::{Connection, OptionalExtension, Transaction};
+use rusqlite::{Connection, OptionalExtension};
 use tracing::{debug, info};
 
 #[allow(unused)]
@@ -19,7 +19,7 @@ impl Database {
     pub fn tag_file(&mut self, file: &File, tag_names: &[&str]) -> Result<(), DatabaseError> {
         let tx = self.connection.transaction()?;
 
-        let file_id = get_file_id_by_hash(&tx, &file.fingerprint_hash)?
+        let file_id = get_file_id_by_fingerprint_hash(&tx, &file.fingerprint_hash)?
             .map_or_else(|| create_file(&tx, file).map(|f| f.id), Ok)?;
         debug!("file_id: {file_id}");
 
@@ -28,7 +28,8 @@ impl Database {
             let tag_name = tag_name.trim();
             let tag_id = get_tag_id_by_name(&tx, tag_name)?.map_or_else(
                 || {
-                    let tag_id = create_tag(&tx, tag_name).map(|tag| tag.id);
+                    let tag_id: Result<i32, DatabaseError> =
+                        create_tag(&tx, tag_name).map(|tag| tag.id);
                     info!("created tag: {tag_name}");
                     tag_id
                 },
@@ -66,7 +67,8 @@ impl Database {
 
 pub fn get_tag_by_name(conn: &Connection, name: &str) -> Result<Option<DbTag>, DatabaseError> {
     let mut query = conn.prepare(
-        "SELECT * FROM tags 
+        "SELECT * 
+             FROM tags 
              WHERE name = ?1",
     )?;
 
@@ -80,8 +82,8 @@ pub fn get_tag_by_name(conn: &Connection, name: &str) -> Result<Option<DbTag>, D
         .optional()?)
 }
 
-fn delete_tag(tx: &Transaction, id: i32) -> Result<(), DatabaseError> {
-    tx.execute(
+fn delete_tag(conn: &Connection, id: i32) -> Result<(), DatabaseError> {
+    conn.execute(
         "DELETE FROM tags
              WHERE id = ?1",
         (id,),
@@ -91,8 +93,8 @@ fn delete_tag(tx: &Transaction, id: i32) -> Result<(), DatabaseError> {
     Ok(())
 }
 
-fn create_tag(tx: &Transaction, name: &str) -> Result<DbTag, DatabaseError> {
-    let mut insert = tx.prepare(
+fn create_tag(conn: &Connection, name: &str) -> Result<DbTag, DatabaseError> {
+    let mut insert = conn.prepare(
         "INSERT INTO tags (name) 
              VALUES (?1) 
              RETURNING id, name",

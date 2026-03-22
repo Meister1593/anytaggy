@@ -1,5 +1,6 @@
 mod tables;
 
+use bon::Builder;
 use rusqlite::{Connection, OpenFlags};
 use rusqlite_migration::{M, Migrations};
 use std::path::Path;
@@ -14,6 +15,18 @@ pub struct File {
     pub name: String,
     pub contents_hash: String,
     pub fingerprint_hash: String,
+    pub size: String,
+}
+
+#[allow(unused)]
+#[derive(Default, Debug, Builder)]
+pub struct DbFile {
+    pub id: i32,
+    pub path: String,
+    pub name: String,
+    pub contents_hash: String,
+    pub fingerprint_hash: String,
+    pub size: String,
 }
 
 #[derive(Debug, Error)]

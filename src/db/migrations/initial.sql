@@ -2,8 +2,9 @@ CREATE TABLE files (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     path TEXT NOT NULL,
     name TEXT NOT NULL,
-    contents_hash TEXT UNIQUE NOT NULL,
-    fingerprint_hash TEXT UNIQUE NOT NULL
+    contents_hash TEXT NOT NULL,
+    fingerprint_hash TEXT UNIQUE NOT NULL,
+    size TEXT NOT NULL
 );
 CREATE INDEX idx_files_path ON files (path);
 CREATE INDEX idx_files_name ON files (name);
