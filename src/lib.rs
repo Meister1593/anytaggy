@@ -29,6 +29,8 @@ pub enum AppError {
     RepairFileSearchError(#[from] walkdir::Error),
     #[error("Database error: {0}")]
     Database(#[from] db::DatabaseError),
+    #[error("Parse error: {0}")]
+    ParseError(#[from] std::num::ParseIntError),
     #[error("Unhandled error: {0}")]
     Unhandled(#[from] std::io::Error),
 }

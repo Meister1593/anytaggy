@@ -15,16 +15,20 @@ pub fn repair(db: &mut Database, search_path: &Path) -> Result<(), AppError> {
         let entry = entry?;
         if entry.file_type().is_file() {
             let file = create_file_struct_from_path(&entry.into_path())?;
-            if file.size == 0 {
-                warn!("File ({}) has zero size, cannot be compared.", file.path);
+            let file_size = match file.size.parse::<u64>() {
+                Ok(file_size) => file_size,
+                Err(e) => return Err(AppError::ParseError(e)),
+            };
+            if file_size == 0 {
                 // we cannot compare empty files with different names, it's impossible
+                warn!("file ({}) has zero size, cannot be compared.", file.path);
                 continue;
             }
 
             let db_files = db.get_files_by_contents_hash(&file.contents_hash)?;
             if db_files.len() >= 2 {
                 // we cannot compare multiple conflicting hashes
-                warn!("Hash collision: {:?}", db_files);
+                warn!("hash collision: {:?}", db_files);
                 continue;
             }
             if let Some(db_file) = db_files.first() {
@@ -55,6 +59,7 @@ pub fn repair(db: &mut Database, search_path: &Path) -> Result<(), AppError> {
         let any_updated_file_matched = files_to_update.iter().any(|file| file.id.eq(&db_file.id));
         if !Path::new(&db_file.path).exists() && !any_updated_file_matched {
             debug!("found missing file: {} (stored in db)", &db_file.path);
+
             files_to_delete.push(db_file);
         }
     }
@@ -62,10 +67,14 @@ pub fn repair(db: &mut Database, search_path: &Path) -> Result<(), AppError> {
     db.bulk_update_and_delete(&files_to_update, &files_to_delete)?;
 
     for file in files_to_update {
-        info!("Updated file location in DB: {}", &file.path);
+        let message = format!("Updated file location in DB: {}", &file.path);
+        println!("{}", message);
+        info!(message)
     }
     for file in files_to_delete {
-        info!("Deleted file from db: {}", &file.path);
+        let message = format!("Cleaned file from DB: {}", &file.path);
+        println!("{}", message);
+        info!(message)
     }
 
     Ok(())

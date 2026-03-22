@@ -10,10 +10,12 @@ pub fn tag_file(db: &mut Database, file_path: &Path, tag_names: &[&str]) -> Resu
     if !db_files.is_empty() {
         let affected_file_paths: Vec<String> =
             db_files.iter().map(|file| file.path.clone()).collect();
-        warn!(
+        let message = format!(
             "Warning: file with same hash exists, moving files ({}) will cause it to be deleted from database on repair.",
             affected_file_paths.join("; ")
-        )
+        );
+        println!("{}", message);
+        warn!(message);
     }
     db.tag_file(&file, tag_names)?;
 

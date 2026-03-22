@@ -28,7 +28,8 @@ impl Database {
             let tag_name = tag_name.trim();
             let tag_id = get_tag_id_by_name(&tx, tag_name)?.map_or_else(
                 || {
-                    let tag_id = create_tag(&tx, tag_name).map(|tag| tag.id);
+                    let tag_id: Result<i32, DatabaseError> =
+                        create_tag(&tx, tag_name).map(|tag| tag.id);
                     info!("created tag: {tag_name}");
                     tag_id
                 },

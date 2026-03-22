@@ -14,7 +14,7 @@ pub struct File {
     pub name: String,
     pub contents_hash: String,
     pub fingerprint_hash: String,
-    pub size: u64,
+    pub size: String,
 }
 
 #[allow(unused)]
@@ -25,7 +25,7 @@ pub struct DbFile {
     pub name: String,
     pub contents_hash: String,
     pub fingerprint_hash: String,
-    pub size: u64,
+    pub size: String,
 }
 
 impl DbFile {
@@ -41,7 +41,7 @@ pub struct DbFileBuilder {
     name: String,
     contents_hash: String,
     fingerprint_hash: String,
-    size: u64,
+    size: String,
 }
 impl DbFileBuilder {
     pub fn new() -> DbFileBuilder {
@@ -51,7 +51,7 @@ impl DbFileBuilder {
             name: String::new(),
             contents_hash: String::new(),
             fingerprint_hash: String::new(),
-            size: 0,
+            size: String::new(),
         }
     }
 
@@ -80,7 +80,7 @@ impl DbFileBuilder {
         self
     }
 
-    pub fn size(mut self, size: u64) -> DbFileBuilder {
+    pub fn size(mut self, size: String) -> DbFileBuilder {
         self.size = size;
         self
     }

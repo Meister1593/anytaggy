@@ -50,7 +50,7 @@ pub(super) fn create_file_struct_from_path(file_path: &Path) -> Result<crate::db
     let contents_hash = get_file_contents_hash(file_path)?;
     debug!("contents_hash: {contents_hash}");
 
-    let size = file_path.metadata()?.len();
+    let size = format!("{}", file_path.metadata()?.len());
     debug!("size: {size}");
 
     let fingerprint_hash = get_fingerprint_hash(&contents_hash, &path)?;

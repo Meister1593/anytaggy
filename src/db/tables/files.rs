@@ -123,9 +123,9 @@ pub fn delete_file(conn: &Connection, id: i32) -> Result<(), rusqlite::Error> {
 
 pub fn create_file(conn: &Connection, file: &File) -> Result<DbFile, rusqlite::Error> {
     let mut insert = conn.prepare(
-        "INSERT INTO files (path, name, contents_hash, fingerprint_hash) 
-             VALUES (?1, ?2, ?3, ?4) 
-             RETURNING id, path, name, contents_hash, fingerprint_hash",
+        "INSERT INTO files (path, name, contents_hash, fingerprint_hash, size) 
+             VALUES (?1, ?2, ?3, ?4, ?5) 
+             RETURNING id, path, name, contents_hash, fingerprint_hash, size",
     )?;
 
     let db_file = insert.query_one(
@@ -134,6 +134,7 @@ pub fn create_file(conn: &Connection, file: &File) -> Result<DbFile, rusqlite::E
             &file.name,
             &file.contents_hash,
             &file.fingerprint_hash,
+            &file.size,
         ),
         |row| {
             Ok(DbFile::builder()
@@ -142,6 +143,7 @@ pub fn create_file(conn: &Connection, file: &File) -> Result<DbFile, rusqlite::E
                 .name(row.get(2)?)
                 .contents_hash(row.get(3)?)
                 .fingerprint_hash(row.get(4)?)
+                .size(row.get(5)?)
                 .build())
         },
     )?;
