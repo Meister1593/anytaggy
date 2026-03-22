@@ -81,6 +81,8 @@ pub enum Command {
         #[arg(value_parser = NonEmptyStringValueParser::new(), value_delimiter=' ')]
         tags: Option<Vec<String>>,
     },
+    /// Repair database under it's path
+    Repair {},
 }
 
 #[allow(clippy::missing_errors_doc)]
@@ -115,7 +117,7 @@ pub fn entrypoint(args: Args) -> Result<Option<String>, AppError> {
     debug!("database_path: {}", database_path.display());
 
     let mode = match args.command {
-        Command::Tag { .. } => DatabaseMode::ReadWriteCreate,
+        Command::Tag { .. } | Command::Repair { .. } => DatabaseMode::ReadWriteCreate,
         Command::Untag { .. } | Command::RmTags { .. } => DatabaseMode::ReadWrite,
         Command::Tags { .. } | Command::Files { .. } => DatabaseMode::Read,
     };
@@ -202,6 +204,7 @@ pub fn entrypoint(args: Args) -> Result<Option<String>, AppError> {
                 commands::files::get_files(&db)
             }
         }
+        Command::Repair {} => commands::repair::repair(&mut db).map(|()| None),
     }
 }
 

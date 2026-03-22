@@ -1,4 +1,5 @@
 pub mod files;
+pub mod repair;
 pub mod rm_tags;
 pub mod tag;
 pub mod tags;
