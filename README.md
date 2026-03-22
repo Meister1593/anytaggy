@@ -10,7 +10,7 @@ Initial idea was to have a portable database of file tags for media, but this ca
 
 ## Roadmap
 - [x] Basic functionality - Implemented (create, delete, tag, find files)
-- [!] Repair (move, rename files and try to restore them in database) 
+- [!] Repair - Implemented, but needs more testing (move, rename files and try to restore them in database) 
 - [ ] Generic data on files (arbitrary data linking to files, retrieving)
 - [ ] Tag queries (combine AND/OR/NOT in one query)
 
