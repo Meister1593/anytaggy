@@ -15,6 +15,10 @@ pub fn repair(db: &mut Database, search_path: &Path) -> Result<(), AppError> {
         let entry = entry?;
         if entry.file_type().is_file() {
             let file = create_file_struct_from_path(&entry.into_path())?;
+            if file.size == 0 {
+                // we cannot compare empty files with different names, it's impossible
+                continue;
+            }
 
             let db_file = db.get_file_by_contents_hash(&file.contents_hash)?;
             if let Some(db_file) = db_file {
@@ -42,11 +46,8 @@ pub fn repair(db: &mut Database, search_path: &Path) -> Result<(), AppError> {
     let mut files_to_delete: Vec<DbFile> = Vec::new();
     let all_db_files = db.get_all_files()?;
     for db_file in all_db_files {
-        if !Path::new(&db_file.path).exists()
-            && !files_to_update
-                .iter()
-                .any(|file| file.contents_hash.eq(&db_file.contents_hash))
-        {
+        let any_updated_file_matched = files_to_update.iter().any(|file| file.id.eq(&db_file.id));
+        if !Path::new(&db_file.path).exists() && !any_updated_file_matched {
             debug!("found missing file: {} (stored in db)", &db_file.path);
             files_to_delete.push(db_file);
         }
