@@ -191,7 +191,7 @@ pub fn get_file_by_contents_hash(
     contents_hash: &str,
 ) -> Result<Vec<DbFile>, rusqlite::Error> {
     let mut query = conn.prepare(
-        "SELECT id, name, path, contents_hash, fingerprint_hash
+        "SELECT *
             FROM files 
             WHERE contents_hash = ?1",
     )?;
@@ -204,6 +204,7 @@ pub fn get_file_by_contents_hash(
                 .name(row.get(2)?)
                 .contents_hash(row.get(3)?)
                 .fingerprint_hash(row.get(4)?)
+                .size(row.get(5)?)
                 .build())
         })?
         .filter_map(Result::ok)
@@ -224,7 +225,7 @@ fn get_all_files_paths(conn: &Connection) -> Result<Vec<String>, rusqlite::Error
 
 fn get_all_files(conn: &Connection) -> Result<Vec<DbFile>, rusqlite::Error> {
     let mut query = conn.prepare(
-        "SELECT id, path, name, contents_hash, fingerprint_hash 
+        "SELECT *
             FROM files",
     )?;
 
@@ -236,6 +237,7 @@ fn get_all_files(conn: &Connection) -> Result<Vec<DbFile>, rusqlite::Error> {
                 .name(row.get(2)?)
                 .contents_hash(row.get(3)?)
                 .fingerprint_hash(row.get(4)?)
+                .size(row.get(5)?)
                 .build())
         })?
         .filter_map(Result::ok)

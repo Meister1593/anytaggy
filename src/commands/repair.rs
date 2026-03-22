@@ -46,6 +46,7 @@ pub fn repair(db: &mut Database, search_path: &Path) -> Result<(), AppError> {
                             .name(file.name)
                             .contents_hash(file.contents_hash)
                             .fingerprint_hash(file.fingerprint_hash)
+                            .size(file.size)
                             .build(),
                     );
                 }

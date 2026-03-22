@@ -1,5 +1,6 @@
 mod tables;
 
+use bon::Builder;
 use rusqlite::{Connection, OpenFlags};
 use rusqlite_migration::{M, Migrations};
 use std::path::Path;
@@ -18,7 +19,7 @@ pub struct File {
 }
 
 #[allow(unused)]
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Builder)]
 pub struct DbFile {
     pub id: i32,
     pub path: String,
@@ -26,75 +27,6 @@ pub struct DbFile {
     pub contents_hash: String,
     pub fingerprint_hash: String,
     pub size: String,
-}
-
-impl DbFile {
-    pub fn builder() -> DbFileBuilder {
-        DbFileBuilder::default()
-    }
-}
-
-#[derive(Default)]
-pub struct DbFileBuilder {
-    id: i32,
-    path: String,
-    name: String,
-    contents_hash: String,
-    fingerprint_hash: String,
-    size: String,
-}
-impl DbFileBuilder {
-    pub fn new() -> DbFileBuilder {
-        DbFileBuilder {
-            id: -1,
-            path: String::new(),
-            name: String::new(),
-            contents_hash: String::new(),
-            fingerprint_hash: String::new(),
-            size: String::new(),
-        }
-    }
-
-    pub fn id(mut self, id: i32) -> DbFileBuilder {
-        self.id = id;
-        self
-    }
-
-    pub fn path(mut self, path: String) -> DbFileBuilder {
-        self.path = path;
-        self
-    }
-
-    pub fn name(mut self, name: String) -> DbFileBuilder {
-        self.name = name;
-        self
-    }
-
-    pub fn contents_hash(mut self, contents_hash: String) -> DbFileBuilder {
-        self.contents_hash = contents_hash;
-        self
-    }
-
-    pub fn fingerprint_hash(mut self, fingerprint_hash: String) -> DbFileBuilder {
-        self.fingerprint_hash = fingerprint_hash;
-        self
-    }
-
-    pub fn size(mut self, size: String) -> DbFileBuilder {
-        self.size = size;
-        self
-    }
-
-    pub fn build(self) -> DbFile {
-        DbFile {
-            id: self.id,
-            path: self.path,
-            name: self.name,
-            contents_hash: self.contents_hash,
-            fingerprint_hash: self.fingerprint_hash,
-            size: self.size,
-        }
-    }
 }
 
 #[derive(Debug, Error)]

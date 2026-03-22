@@ -67,7 +67,8 @@ impl Database {
 
 pub fn get_tag_by_name(conn: &Connection, name: &str) -> Result<Option<DbTag>, DatabaseError> {
     let mut query = conn.prepare(
-        "SELECT * FROM tags 
+        "SELECT * 
+             FROM tags 
              WHERE name = ?1",
     )?;
 
