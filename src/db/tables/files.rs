@@ -1,12 +1,24 @@
 use crate::db::{
-    Database, DatabaseError, DbFile, File,
+    Database, DatabaseError, File,
     tables::{
         file_tags::{get_tag_ids_by_file_id, unreference_file_tag},
         tags::get_tag_by_name,
     },
 };
+use bon::Builder;
 use rusqlite::{Connection, OptionalExtension};
 use tracing::debug;
+
+#[allow(unused)]
+#[derive(Default, Debug, Builder)]
+pub struct DbFile {
+    pub id: i32,
+    pub path: String,
+    pub name: String,
+    pub contents_hash: String,
+    pub fingerprint_hash: String,
+    pub size: String,
+}
 
 impl Database {
     pub fn get_all_files_paths(&self) -> Result<Vec<String>, DatabaseError> {

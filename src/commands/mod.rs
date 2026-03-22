@@ -56,11 +56,11 @@ pub(super) fn create_file_struct_from_path(file_path: &Path) -> Result<crate::db
     let fingerprint_hash = get_fingerprint_hash(&contents_hash, &path)?;
     debug!("fingerprint_hash: {fingerprint_hash}");
 
-    Ok(crate::db::File {
-        path,
-        name,
-        contents_hash,
-        fingerprint_hash,
-        size,
-    })
+    Ok(crate::db::File::builder()
+        .path(path)
+        .name(name)
+        .contents_hash(contents_hash)
+        .fingerprint_hash(fingerprint_hash)
+        .size(size)
+        .build())
 }

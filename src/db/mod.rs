@@ -1,4 +1,4 @@
-mod tables;
+pub mod tables;
 
 use bon::Builder;
 use rusqlite::{Connection, OpenFlags};
@@ -9,19 +9,8 @@ use thiserror::Error;
 const MIGRATIONS_SLICE: &[M] = &[M::up(include_str!("migrations/initial.sql"))];
 const MIGRATIONS: Migrations = Migrations::from_slice(MIGRATIONS_SLICE);
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Builder)]
 pub struct File {
-    pub path: String,
-    pub name: String,
-    pub contents_hash: String,
-    pub fingerprint_hash: String,
-    pub size: String,
-}
-
-#[allow(unused)]
-#[derive(Default, Debug, Builder)]
-pub struct DbFile {
-    pub id: i32,
     pub path: String,
     pub name: String,
     pub contents_hash: String,

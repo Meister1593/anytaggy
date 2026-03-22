@@ -5,12 +5,13 @@ use crate::db::{
         files::{create_file, get_file_id_by_fingerprint_hash},
     },
 };
+use bon::Builder;
 use rusqlite::{Connection, OptionalExtension};
 use tracing::{debug, info};
 
 #[allow(unused)]
-#[derive(Debug)]
-pub(in crate::db) struct DbTag {
+#[derive(Debug, Builder)]
+pub struct DbTag {
     pub id: i32,
     pub name: String,
 }
@@ -74,10 +75,7 @@ pub fn get_tag_by_name(conn: &Connection, name: &str) -> Result<Option<DbTag>, D
 
     Ok(query
         .query_one([name], |row| {
-            Ok(DbTag {
-                id: row.get(0)?,
-                name: row.get(1)?,
-            })
+            Ok(DbTag::builder().id(row.get(0)?).name(row.get(1)?).build())
         })
         .optional()?)
 }
@@ -101,10 +99,7 @@ fn create_tag(conn: &Connection, name: &str) -> Result<DbTag, DatabaseError> {
     )?;
 
     let db_tag = insert.query_one([name], |row| {
-        Ok(DbTag {
-            id: row.get(0)?,
-            name: row.get(1)?,
-        })
+        Ok(DbTag::builder().id(row.get(0)?).name(row.get(1)?).build())
     })?;
     debug!("created tag {db_tag:?}");
 

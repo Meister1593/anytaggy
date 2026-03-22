@@ -6,7 +6,7 @@ use walkdir::WalkDir;
 use crate::{
     AppError,
     commands::create_file_struct_from_path,
-    db::{Database, DbFile},
+    db::{Database, tables::files::DbFile},
 };
 
 pub fn repair(db: &mut Database, search_path: &Path) -> Result<(), AppError> {
