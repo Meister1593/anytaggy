@@ -1,3 +1,5 @@
+# PROJECT DEVELOPMENT CONTINUED ON [CODEBERG](https://codeberg.org/plyshka/anytaggy), PLEASE LOOK FOR FURTHER DEVELOPMENT THERE.
+
 # Anytaggy
 
 ## Project is in heavy development, expect major breaking changes!
